@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# macOS system file
+.DS_Store
+
 # Environment variables
 .env
 .env.local
