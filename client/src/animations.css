@@ -1,4 +1,32 @@
 /* Custom Animations */
+/* Ensure text is visible on dark background */
+.text-white {
+  color: white !important;
+}
+
+.text-gray-200 {
+  color: #e2e8f0 !important;
+}
+
+.text-gray-300 {
+  color: #cbd5e0 !important;
+}
+
+/* Update any card backgrounds to work with dark theme */
+.bg-gray-50, .bg-gray-100 {
+  background-color: #131d36 !important;
+}
+
+/* Update button styles if needed */
+.btn-primary {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #2563eb;
+}
+
 @keyframes fadeIn {
   0% {
     opacity: 0;

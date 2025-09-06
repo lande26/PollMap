@@ -6,7 +6,7 @@ function Home() {
 
     return (
         <div className="flex bg-base-200 min-h-screen flex-col items-center text-white p-8">
-      <h1 className="text-4xl mt-2 md:text-5xl font-bold mb-6 text-center flex flex-col gap-2 md:block">Welcome to PollMap</h1>
+      <h1 className="text-4xl mt-2 md:text-5xl font-bold mb-6 text-center flex flex-col gap-2 md:block">Welcome to <span className="text-[#535BF1]">PollMap</span></h1>
       <p className="text-lg text-center max-w-2xl mb-8">
         PollMap is your platform for real-time, interactive polling. Create polls, participate in
         active discussions, and get instant feedback with live updates and visualizations. Discover
@@ -14,11 +14,11 @@ function Home() {
       </p>
       <div className ="flex flex-col md:flex-row gap-4 mb-8">
         <button
-          className="btn btn-primary px-6 py-3 text-lg font-semibold"
-          onClick={() => navigate('/login')}
-        >
-          Create Poll
-        </button>
+            onClick={() => navigate('/login')}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-12 py-4 rounded-full text-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-2xl backdrop-blur-sm"
+          >
+            Create Poll
+          </button>
       </div>
       <div className="flex flex-col lg:flex-row gap-6 mb-8">
         <div className="bg-base-300 p-6 rounded-lg shadow-md w-full lg:w-96 text-center">

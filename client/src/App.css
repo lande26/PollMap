@@ -1,3 +1,17 @@
+
+/* Ensure header stays consistent */
+nav[class*="bg-[#10172A]"] {
+  height: 56px !important;
+  min-height: 56px !important;
+  max-height: 56px !important;
+  flex-shrink: 0 !important;
+}
+
+/* Reset any conflicting styles on navigation elements */
+nav[class*="bg-[#10172A]"] * {
+  box-sizing: border-box;
+}
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
