@@ -239,6 +239,7 @@
 
 // export default Polls;
 
+
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSocketContext } from '../context/SocketContext';
@@ -253,22 +254,23 @@ const Polls = ({ pollId }) => {
   const [hasVoted, setHasVoted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [userVote, setUserVote] = useState(null); // Track user's vote
-  const socketContext = useSocketContext() ?? {};
+  const [userVote, setUserVote] = useState(null);
   const [isExpired, setIsExpired] = useState(false);
+  const [isPasswordProtected, setIsPasswordProtected] = useState(false);
+  const [isCreator, setIsCreator] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const socketContext = useSocketContext() ?? {};
   const socket = socketContext.socket;
   const { user } = UserAuth();
   const navigate = useNavigate();
-  
-  // Debug: Log the received pollId
+//testing
   useEffect(() => {
     console.log("Polls component received pollId:", pollId);
   }, [pollId]);
   
-  // Fetch all polls if no pollId is provided, or fetch specific poll if pollId is provided
+
   useEffect(() => {
     if (!pollId) {
-      // Fetch all polls
       const fetchAllPolls = async () => {
         try {
           console.log("Fetching all polls");
@@ -279,15 +281,13 @@ const Polls = ({ pollId }) => {
             
           if (pollsError) throw pollsError;
           
-          // For each poll, fetch its options
           const pollsWithOptions = await Promise.all(
             polls.map(async (poll) => {
               const { data: options } = await supabase
                 .from('options')
                 .select('*')
                 .eq('poll_id', poll.id);
-                
-              // Calculate total votes
+
               const totalVotes = options.reduce((sum, option) => sum + option.votes_count, 0);
               
               return {
@@ -309,7 +309,6 @@ const Polls = ({ pollId }) => {
       
       fetchAllPolls();
     } else {
-      // Fetch specific poll
       if (pollId === "undefined") {
         console.error("Received 'undefined' as pollId string");
         setError("Invalid poll ID");
@@ -329,11 +328,26 @@ const Polls = ({ pollId }) => {
           if (pollError) throw pollError;
           console.log("Poll data received:", poll);
           
-
-          if(poll.expires_at && new Date() > new Date(poll.expires_at)){
-            setIsExpired(true);
+          // Check if poll is expired
+          if (poll.expires_at) {
+            const expirationDate = new Date(poll.expires_at);
+            const now = new Date();
+            console.log("Expiration date:", expirationDate);
+            console.log("Current date:", now);
+            console.log("Is expired:", now > expirationDate);
+            if (now > expirationDate) {
+              setIsExpired(true);
+            }
           }
-          // Options for this poll
+          
+          // Check if poll is password protected
+          setIsPasswordProtected(poll.is_password_protected);
+
+          if (user && poll.created_by === user.id) {
+            setIsCreator(true);
+            setIsAuthenticated(true);
+          }
+
           const { data: options, error: optionsError } = await supabase
             .from('options')
             .select('*')
@@ -342,7 +356,6 @@ const Polls = ({ pollId }) => {
           if (optionsError) throw optionsError;
           console.log("Options data received:", options);
           
-          // Check if user has already voted
           let userHasVoted = false;
           let existingVote = null;
           
@@ -361,8 +374,7 @@ const Polls = ({ pollId }) => {
               setSelectedOption(existingVote.option_id);
             }
           }
-          
-          // Calculate total votes
+
           const totalVotes = options.reduce((sum, option) => sum + option.votes_count, 0);
           setPoll({ ...poll, options, totalVotes });
           setHasVoted(userHasVoted);
@@ -378,16 +390,13 @@ const Polls = ({ pollId }) => {
       fetchPoll();
     }
   }, [pollId, user]);
-  
-  // Set up socket listeners only when a specific poll is selected
+
   useEffect(() => {
     if (!socket || !pollId || pollId === "undefined") return;
     
-    // Join the poll room
     socket.emit("joinPoll", pollId);
     console.log(`Joined poll room: ${pollId}`);
     
-    // Listen for updated poll data
     const handlePollDataUpdated = (data) => {
       if (data.data.id === pollId) {
         console.log("Poll data updated:", data.data);
@@ -421,7 +430,6 @@ const Polls = ({ pollId }) => {
     setHasVoted(true);
   };
   
-  // If no pollId is provided, show all polls
   if (!pollId) {
     if (loading) return <div>Loading polls...</div>;
     if (error) return <div>Error: {error}</div>;
@@ -459,22 +467,93 @@ const Polls = ({ pollId }) => {
     );
   }
   
-  // If pollId is provided, show the specific poll for voting
   if (loading) return <div>Loading poll...</div>;
   if (error) return <div>Error: {error}</div>;
   if (!poll) return <div>Poll not found</div>;
   
+  if (isPasswordProtected && !isAuthenticated && !isCreator) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-black">
+        <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-8 border border-gray-700 max-w-md w-full">
+          <h2 className="text-2xl font-bold text-white mb-6">Password Protected</h2>
+          <p className="text-gray-300 mb-6">This poll is password protected. Please enter the password to continue.</p>
+          
+          <form onSubmit={async (e) => {
+            e.preventDefault();
+            const password = e.target.password.value;
+            
+            try {
+              const { data, error } = await supabase
+                .from('polls')
+                .select('password_hash')
+                .eq('id', pollId)
+                .single();
+                
+              if (error) throw error;
+              
+              if (data.password_hash === password) {
+                setIsAuthenticated(true);
+              } else {
+                setError('Incorrect password');
+              }
+            } catch (err) {
+              console.error('Error verifying password:', err);
+              setError('Failed to verify password');
+            }
+          }}>
+            <div className="mb-4">
+              <input
+                type="password"
+                name="password"
+                className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter password"
+                required
+              />
+            </div>
+            
+            {error && <div className="text-red-400 mb-4">{error}</div>}
+            
+            <button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium"
+            >
+              Submit
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+  
+  if (isExpired) {
+    return (
+      <div className="poll-container">
+        <h2>{poll.question}</h2>
+        <div className="bg-red-500/20 border border-red-500 text-red-200 p-4 rounded-lg">
+          This poll has expired and is no longer accepting votes.
+        </div>
+        <div className="results-section">
+          <h3>Final Results</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={poll.options}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="option_text" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="votes_count" fill="#8884d8" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="poll-container">
       <h2>{poll.question}</h2>
-
-      {isExpired && (
-        <div className ="bg-red-500/20 border border-red-500 text-red-200 p-4 rounded-lg mb-6">
-            This poll has expired and is no longer accepting votes.
-        </div>
-      )}
-
-      {!hasVoted && !isExpired ? (
+      
+      {!hasVoted ? (
         <div className="voting-section">
           {poll.options.map(option => (
             <div key={option.id} className="option">
