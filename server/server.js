@@ -6,7 +6,7 @@ import { Server } from 'socket.io';
 import {createClient} from 'redis';
 import {createAdapter} from '@socket.io/redis-adapter';
 import { supabase } from './supabaseClient.js';
-import { handlePollSocket } from './socket/poll.socket.js';
+import { handlePollSocket, cacheService } from './socket/poll.socket.js';
 dotenv.config();
 
 const app = express();
@@ -26,6 +26,8 @@ const io = new Server(server, {
 Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
   io.adapter(createAdapter(pubClient, subClient));
   console.log('Redis adapter connected');
+
+  cacheService.setClient(pubClient);
 });
 
 handlePollSocket(io);
@@ -35,6 +37,15 @@ app.use(express.json());
 
 app.get('/', (req, res) => {
   res.send('Welcome to PollMap Server!');
+});
+
+app.delete('/cache/polls/:pollId', async (req, res) => {
+  try {
+    await cacheService.invalidatePollCache(req.params.pollId);
+    res.json({ message: 'Cache cleared successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to clear cache' });
+  }
 });
 
 const PORT = process.env.PORT || 5001;
