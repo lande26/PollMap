@@ -13,6 +13,7 @@ import Particles from "react-tsparticles"
 import { loadSlim } from "tsparticles-slim"
 import './animations.css'
 import './app.css'
+import './index.css'
 import Polls from './pages/polls.jsx'
 import { SocketContextProvider } from './context/SocketContext.jsx'
 import CreatePoll from './pages/CreatePolll.jsx'
@@ -22,7 +23,7 @@ const Layout = ({ children, showHeader = true }) => {
   return (
     <div className="min-h-screen relative">
       {showHeader && <Header />}
-      <div className={showHeader ? "pt-16" : ""}>
+      <div className={showHeader ? "pt-20" : ""}>
         {children}
       </div>
     </div>
