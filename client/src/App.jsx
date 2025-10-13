@@ -18,7 +18,8 @@ import Polls from './pages/polls.jsx'
 import { SocketContextProvider } from './context/SocketContext.jsx'
 import CreatePoll from './pages/CreatePolll.jsx'
 import PollPage from './pages/PollPage.jsx'
-
+import PollAnalytics from './pages/PollAnalytics.jsx'
+import PasswordProtectedPoll from './components/ProtectedRoute/PasswordProtectedPoll.jsx'
 const Layout = ({ children, showHeader = true }) => {
   return (
     <div className="min-h-screen relative">
@@ -216,7 +217,13 @@ function App() {
                     </Layout>
                   </ProtectedRoute>
                 } />
-
+                <Route path="/polls/:pollId/analytics" element={
+                  <ProtectedRoute>
+                    <Layout showHeader={true}>
+                      <PollAnalytics />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
               </Routes>
             </BrowserRouter>
           </SocketContextProvider>
