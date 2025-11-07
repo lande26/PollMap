@@ -153,7 +153,7 @@ const PollAnalytics = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900  to-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br ">
         <div className="flex flex-col items-center gap-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
           <p className="text-white text-lg">Loading analytics...</p>
@@ -165,7 +165,7 @@ const PollAnalytics = () => {
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900  to-slate-900 p-8">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br  p-8">
         <Card className="bg-[#10172A]/80 backdrop-blur border border-gray-700 max-w-md text-center">
           <CardContent className="pt-6">
             <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -187,7 +187,7 @@ const PollAnalytics = () => {
 
   if (!poll) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900  to-slate-900 p-8">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br  p-8">
         <Card className="bg-[#10172A]/80 backdrop-blur border border-gray-700 max-w-md text-center">
           <CardContent className="pt-6">
             <h3 className="text-xl font-semibold text-white mb-2">Poll Not Found</h3>
@@ -205,41 +205,8 @@ const PollAnalytics = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900  to-slate-900">
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-10 bg-[#10172A]/80 backdrop-blur-md border-b border-gray-700">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              onClick={() => navigate(`/polls/${pollId}`)}
-              className="text-white hover:bg-white/10 p-2"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="text-gray-400 text-sm">{poll.question}</h1>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              onClick={() => navigate(`/polls/${pollId}`)}
-              className="text-white hover:bg-white/10"
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              View Poll
-            </Button>
-            <Button
-              variant="ghost"
-              className="text-white hover:bg-white/10"
-            >
-              <Share2 className="h-4 w-4 mr-2" />
-              Share
-            </Button>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br ">
+      
 
       {/* Main Content */}
       <div className="pt-20 px-6 pb-6">
