@@ -35,13 +35,34 @@ export const AuthProvider = ({ children }) => {
       }
 
       console.log("Sign-in success:", data);
-      return { success: true, data }; 
+      return { success: true, data };
     } catch (error) {
       console.error("Unexpected error during sign-in:", error.message);
       return {
         success: false,
         error: "An unexpected error occurred. Please try again.",
       };
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+
+      if (error) {
+        console.error("Error signing in with Google:", error.message);
+        return { success: false, error: error.message };
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      console.error("Unexpected error during Google sign-in:", error.message);
+      return { success: false, error: "An unexpected error occurred." };
     }
   };
 
@@ -73,7 +94,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ signup, login, session, user, loading, signOut }}
+      value={{ signup, login, signInWithGoogle, session, user, loading, signOut }}
     >
       {!loading && children}
     </AuthContext.Provider>

@@ -38,8 +38,7 @@ function Home() {
         <div className="bg-base-300 p-6 rounded-lg shadow-md w-full lg:w-96 text-center">
           <h2 className="text-3xl font-semibold mb-4">Bookmark & Track</h2>
           <p className="text-gray-400">
-            Bookmark polls to save them for later, view your past participation, and stay updated
-            on topics you care about.
+            Bookmark polls to save them for later, view your past participation, and stay updated.
           </p>
         </div>
       </div>

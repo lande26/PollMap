@@ -3,7 +3,7 @@ import { Routes, Route, BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from './context/AuthContext.jsx'
 import Login from './pages/login.jsx'
-import Signup from './pages/singup.jsx'
+import Signup from './pages/Signup.jsx'
 import Home from './pages/Home.jsx'
 import Header from './components/Header/Header.jsx'
 import Dashboard from './pages/Dashboard.jsx'
@@ -181,17 +181,6 @@ function App() {
                   <ProtectedRoute>
                     <Layout showHeader={true}>
                       <Profile />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/bookmarks" element={
-                  <ProtectedRoute>
-                    <Layout showHeader={true}>
-                      <div className="min-h-screen flex items-center justify-center">
-                        <div className="text-2xl text-white">
-                          Bookmarks Page - Under Construction
-                        </div>
-                      </div>
                     </Layout>
                   </ProtectedRoute>
                 } />

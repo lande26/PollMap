@@ -191,18 +191,6 @@ function Header() {
                           <span className="font-medium">Profile</span>
                         </Link>
                         
-                        <Link 
-                          to="/bookmarks" 
-                          className="flex items-center px-4 py-3 text-gray-300 hover:bg-blue-600/20 hover:text-white transition-all duration-200 group"
-                          onClick={() => setDropdownOpen(false)}
-                        >
-                          <div className="w-8 h-8 rounded-lg bg-blue-600/20 flex items-center justify-center mr-3 group-hover:bg-blue-600/30 transition-colors">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                            </svg>
-                          </div>
-                          <span className="font-medium">Bookmarks</span>
-                        </Link>
                         
                         <div className="px-2 py-2 border-t border-blue-900/30 mt-2">
                           <button 
@@ -282,17 +270,6 @@ function Header() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                   Profile
-                </Link>
-                
-                <Link 
-                  to="/bookmarks" 
-                  className="flex items-center px-4 py-3 text-gray-300 hover:bg-blue-600/20 hover:text-white transition-all duration-200"
-                  onClick={() => setDropdownOpen(false)}
-                >
-                  <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                  </svg>
-                  Bookmarks
                 </Link>
               </div>
               
