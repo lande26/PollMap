@@ -326,13 +326,13 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden ">
-      <div className="relative z-10 container mx-auto px-4 py-8 max-w-5xl">
+      <div className="relative z-10 container mx-auto px-4 py-8 max-w-7xl">
 
         <div className="flex flex-col items-center text-center mb-16">
           <div className="mb-8 relative z-10">
             <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-6 tracking-tight leading-tight "
               style={{ fontFamily: 'Lato, sans-serif' }}>
-              Welcome back, <br />
+              Welcome back,
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-indigo-400 animate-gradient-x">
                 {firstName}!
               </span>
@@ -362,7 +362,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
           <SpotlightCard className="p-6" spotlightColor="rgba(34, 197, 94, 0.15)">
             <div className="flex items-center gap-3 mb-3">
               <div className="bg-green-500/20 p-3 rounded-lg">
@@ -401,7 +401,7 @@ const Dashboard = () => {
           </SpotlightCard>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10 mb-16 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10 mb-16">
           <FeatureCard
             icon={<PlusCircle size={24} className="text-blue-300" />}
             title="Create Polls"
@@ -428,7 +428,7 @@ const Dashboard = () => {
         </div>
 
         {/* Polls Section with SpotlightCard */}
-        <SpotlightCard className="p-8 max-w-4xl mx-auto" spotlightColor="rgba(59, 130, 246, 0.15)">
+        <SpotlightCard className="p-8" spotlightColor="rgba(59, 130, 246, 0.15)">
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center gap-3">
               <div className="bg-blue-500/20 p-2 rounded-lg">
