@@ -29,10 +29,17 @@ const subClient = pubClient.duplicate();
 pubClient.on('error', (err) => console.error('Redis PubClient Error', err));
 subClient.on('error', (err) => console.error('Redis SubClient Error', err));
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://poll-map.vercel.app",
+  process.env.CLIENT_URL
+].filter(Boolean);
+
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
-    // credentials : true,
+    origin: allowedOrigins,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
   }
 });
 
@@ -54,7 +61,7 @@ handlePollSocket(io);
 handleRoomSocket(io, pubClient);
 
 
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
+app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json());
 
 app.get('/', (req, res) => {
