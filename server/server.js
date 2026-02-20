@@ -47,6 +47,10 @@ app.get('/', (req, res) => {
   res.send('Welcome to PollMap Server!');
 });
 
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 app.delete('/cache/polls/:pollId', async (req, res) => {
   try {
     await cacheService.invalidatePollCache(req.params.pollId);
