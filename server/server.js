@@ -14,9 +14,20 @@ dotenv.config();
 const app = express();
 const server = createServer(app);
 
+const getRedisConfig = () => {
+  const url = process.env.REDIS_URL || 'redis://localhost:6379';
+  const config = { url };
+  if (url.startsWith('rediss://')) {
+    config.socket = { tls: true, rejectUnauthorized: false };
+  }
+  return config;
+};
 
-const pubClient = createClient({ url: process.env.REDIS_URL || 'redis://localhost:6379' });
+const pubClient = createClient(getRedisConfig());
 const subClient = pubClient.duplicate();
+
+pubClient.on('error', (err) => console.error('Redis PubClient Error', err));
+subClient.on('error', (err) => console.error('Redis SubClient Error', err));
 
 const io = new Server(server, {
   cors: {
@@ -25,12 +36,15 @@ const io = new Server(server, {
   }
 });
 
-Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
-  io.adapter(createAdapter(pubClient, subClient));
-  console.log('Redis adapter connected');
-
-  cacheService.setClient(pubClient);
-});
+Promise.all([pubClient.connect(), subClient.connect()])
+  .then(() => {
+    io.adapter(createAdapter(pubClient, subClient));
+    console.log('Redis adapter connected');
+    cacheService.setClient(pubClient);
+  })
+  .catch((err) => {
+    console.error('Failed to connect to Redis:', err);
+  });
 
 // Wire up socket authentication middleware
 io.use(authorizeUser);

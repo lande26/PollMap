@@ -291,24 +291,31 @@ const Polls = ({ pollId, isDashboardView = false }) => {
     setPoll({ ...poll, options: updatedOptions, totalVotes: poll.totalVotes + 1 });
 
     try {
-      const { error } = await supabase
-        .from('votes')
-        .insert({
-          poll_id: pollId,
-          option_id: selectedOption,
-          user_id: user.id
-        });
+      if (socket && socket.connected) {
+        // Emit vote over socket to ensure real-time server broadcasting
+        socket.emit("vote", { pollId, optionId: selectedOption, userId: user.id });
+      } else {
+        // Fallback if socket is unavailable
+        const { error } = await supabase
+          .from('votes')
+          .insert({
+            poll_id: pollId,
+            option_id: selectedOption,
+            user_id: user.id
+          });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      // Update vote count on server
-      await supabase.rpc('increment_vote', { option_id: selectedOption });
+        // Update vote count on server
+        await supabase.rpc('increment_vote', { option_id: selectedOption });
+
+        // Refresh poll data to ensure sync locally
+        fetchPoll();
+      }
 
       toast.success('Your vote has been submitted!');
       trackEvent('Poll', 'vote_submitted', pollId, selectedOption);
 
-      // Refresh poll data to ensure sync
-      fetchPoll();
     } catch (err) {
       console.error("Error voting:", err);
       toast.error('Failed to submit vote');
