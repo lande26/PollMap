@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { Routes, Route, BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from './context/AuthContext.jsx'
-import Login from './pages/login.jsx'
+import Login from './pages/Login.jsx'
 import Signup from './pages/Signup.jsx'
 import Home from './pages/Home.jsx'
 import Header from './components/Header/Header.jsx'
@@ -12,21 +12,26 @@ import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute.jsx'
 import Particles from "react-tsparticles"
 import { loadSlim } from "tsparticles-slim"
 import './animations.css'
-import './app.css'
+import './App.css'
 import './index.css'
 import Polls from './pages/polls.jsx'
 import { SocketContextProvider } from './context/SocketContext.jsx'
-import CreatePoll from './pages/CreatePolll.jsx'
+import CreatePoll from './pages/CreatePoll.jsx'
 import PollPage from './pages/PollPage.jsx'
 import PollAnalytics from './pages/PollAnalytics.jsx'
 import PasswordProtectedPoll from './components/ProtectedRoute/PasswordProtectedPoll.jsx'
-const Layout = ({ children, showHeader = true }) => {
+import RoomsPage from './pages/RoomsPage.jsx'
+import RoomPage from './pages/RoomPage.jsx'
+import JoinRoomByLink from './pages/JoinRoomByLink.jsx'
+import Footer from './components/Footer.jsx'
+const Layout = ({ children, showHeader = true, showFooter = true }) => {
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen relative flex flex-col">
       {showHeader && <Header />}
-      <div className={showHeader ? "pt-20" : ""}>
+      <div className={`flex-1 ${showHeader ? "pt-20" : ""}`}>
         {children}
       </div>
+      {showFooter && <Footer />}
     </div>
   )
 }
@@ -158,13 +163,13 @@ function App() {
                 } />
 
                 <Route path="/login" element={
-                  <Layout showHeader={false}>
+                  <Layout showHeader={false} showFooter={false}>
                     <Login />
                   </Layout>
                 } />
 
                 <Route path="/signup" element={
-                  <Layout showHeader={false}>
+                  <Layout showHeader={false} showFooter={false}>
                     <Signup />
                   </Layout>
                 } />
@@ -210,6 +215,28 @@ function App() {
                   <ProtectedRoute>
                     <Layout showHeader={true}>
                       <PollAnalytics />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/rooms" element={
+                  <ProtectedRoute>
+                    <Layout showHeader={true}>
+                      <RoomsPage />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/rooms/:roomCode" element={
+                  <ProtectedRoute>
+                    <Layout showHeader={true}>
+                      <RoomPage />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/rooms/join/:token" element={
+                  <ProtectedRoute>
+                    <Layout showHeader={true}>
+                      <JoinRoomByLink />
                     </Layout>
                   </ProtectedRoute>
                 } />

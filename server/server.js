@@ -3,22 +3,24 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import {createClient} from 'redis';
-import {createAdapter} from '@socket.io/redis-adapter';
+import { createClient } from 'redis';
+import { createAdapter } from '@socket.io/redis-adapter';
 import { supabase } from './supabaseClient.js';
 import { handlePollSocket, cacheService } from './socket/poll.socket.js';
+import { handleRoomSocket } from './socket/room.socket.js';
+import { authorizeUser } from './middlewares/socketAuth.js';
 dotenv.config();
 
 const app = express();
 const server = createServer(app);
 
 
-const pubClient = createClient({url: process.env.REDIS_URL || 'redis://localhost:6379'});
+const pubClient = createClient({ url: process.env.REDIS_URL || 'redis://localhost:6379' });
 const subClient = pubClient.duplicate();
 
 const io = new Server(server, {
-  cors:{
-    origin : "http://localhost:5173",
+  cors: {
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
     // credentials : true,
   }
 });
@@ -30,9 +32,15 @@ Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
   cacheService.setClient(pubClient);
 });
 
-handlePollSocket(io);
+// Wire up socket authentication middleware
+io.use(authorizeUser);
+console.log('Socket authentication middleware registered');
 
-app.use(cors({origin: 'http://localhost:5173'}));
+handlePollSocket(io);
+handleRoomSocket(io, pubClient);
+
+
+app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
 app.use(express.json());
 
 app.get('/', (req, res) => {

@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
 import { BarChart3, Bookmark, Users, ArrowRight, PlusCircle, Activity } from 'lucide-react';
 
-// --- COPIED COMPONENTS FROM DASHBOARD.JSX FOR CONSISTENCY ---
-
 const springValues = {
   damping: 30,
   stiffness: 100,
@@ -211,16 +209,12 @@ const SpotlightCard = ({ children, className = '', spotlightColor = 'rgba(255, 2
   );
 };
 
-// --- HOME PAGE COMPONENT ---
-
 const Home = () => {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen relative overflow-hidden flex flex-col items-center justify-center py-20">
       <div className="relative z-10 container mx-auto px-4 flex flex-col items-center">
-
-        {/* Header Section */}
         <div className="text-center mb-20 max-w-5xl">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm md:text-base text-blue-300 mb-8 backdrop-blur-sm">
             <Activity size={18} />
@@ -257,7 +251,6 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Feature Grid using Dashboard Components */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-7xl">
           <FeatureCard
             icon={<PlusCircle size={32} className="text-blue-300" />}

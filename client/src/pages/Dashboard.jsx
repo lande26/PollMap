@@ -11,7 +11,7 @@
 // // //   const [polls, setPolls] = useState([]);
 // // //   const [selectedPollId, setSelectedPollId] = useState(null);
 // // //   const [loading, setLoading] = useState(true);
-  
+
 // // //   const userEmail = session?.user?.email;
 // // //   const firstName = userEmail 
 // // //     ? userEmail.split('@')[0].replace(/[^a-zA-Z]/g, '') || 'User'
@@ -32,15 +32,15 @@
 // // //           `)
 // // //           .eq('created_by', user?.id)
 // // //           .order('created_at', { ascending: false });
-          
+
 // // //         if (error) throw error;
-        
+
 // // //         // Calculate total votes for each poll
 // // //         const pollsWithTotals = data.map(poll => ({
 // // //           ...poll,
 // // //           totalVotes: poll.options.reduce((sum, option) => sum + option.votes_count, 0)
 // // //         }));
-        
+
 // // //         setPolls(pollsWithTotals);
 // // //         setLoading(false);
 // // //       } catch (error) {
@@ -48,7 +48,7 @@
 // // //         setLoading(false);
 // // //       }
 // // //     };
-    
+
 // // //     fetchPolls();
 // // //   }, [user]);
 
@@ -88,7 +88,7 @@
 // // //         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-900/20 to-transparent"></div>
 // // //         <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-purple-900/20 to-transparent"></div>
 // // //       </div>
-      
+
 // // //       <div className="relative z-10 container mx-auto px-4 py-8">
 // // //         {/* Header Section */}
 // // //         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10">
@@ -100,7 +100,7 @@
 // // //               Create, participate, and track polls in real-time with instant feedback and visualizations.
 // // //             </p>
 // // //           </div>
-          
+
 // // //           <div className="flex flex-wrap gap-3">
 // // //             <button 
 // // //               onClick={handleCreatePoll}
@@ -124,7 +124,7 @@
 // // //             </button>
 // // //           </div>
 // // //         </div>
-        
+
 // // //         {/* Feature Cards */}
 // // //         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
 // // //           <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700">
@@ -138,7 +138,7 @@
 // // //               Create custom polls on any topic, add options, set permissions, and see responses in real-time.
 // // //             </p>
 // // //           </div>
-          
+
 // // //           <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700">
 // // //             <div className="flex items-center gap-4 mb-4">
 // // //               <div className="bg-purple-500/20 p-3 rounded-lg">
@@ -150,7 +150,7 @@
 // // //               Browse public polls or join private ones. Cast your vote and see real-time results.
 // // //             </p>
 // // //           </div>
-          
+
 // // //           <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700">
 // // //             <div className="flex items-center gap-4 mb-4">
 // // //               <div className="bg-green-500/20 p-3 rounded-lg">
@@ -163,7 +163,7 @@
 // // //             </p>
 // // //           </div>
 // // //         </div>
-        
+
 // // //         {/* Polls Section */}
 // // //         <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700">
 // // //           <div className="flex justify-between items-center mb-6">
@@ -179,7 +179,7 @@
 // // //               New Poll
 // // //             </button>
 // // //           </div>
-          
+
 // // //           {loading ? (
 // // //             <div className="flex justify-center items-center h-64">
 // // //               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -227,7 +227,7 @@
 // // //                         <span>{new Date(poll.created_at).toLocaleDateString()}</span>
 // // //                         <span>{poll.options?.length || 0} options</span>
 // // //                       </div>
-                      
+
 // // //                       {/* Show poll options and vote counts */}
 // // //                       {poll.options && poll.options.length > 0 && (
 // // //                         <div className="mt-3 space-y-2">
@@ -239,7 +239,7 @@
 // // //                           ))}
 // // //                         </div>
 // // //                       )}
-                      
+
 // // //                       {/* Action buttons */}
 // // //                       <div className="flex justify-end gap-2 mt-3">
 // // //                         <button
@@ -257,7 +257,7 @@
 // // //                   ))}
 // // //                 </div>
 // // //               </div>
-              
+
 // // //               {/* Poll Display */}
 // // //               <div className="bg-gray-700/50 rounded-xl p-4">
 // // //                 {selectedPollId ? (
@@ -356,31 +356,31 @@
 // //   const [isFocused, setIsFocused] = useState(false);
 // //   const [position, setPosition] = useState({ x: 0, y: 0 });
 // //   const [opacity, setOpacity] = useState(0);
-  
+
 // //   const handleMouseMove = e => {
 // //     if (!divRef.current || isFocused) return;
 // //     const rect = divRef.current.getBoundingClientRect();
 // //     setPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
 // //   };
-  
+
 // //   const handleFocus = () => {
 // //     setIsFocused(true);
 // //     setOpacity(0.6);
 // //   };
-  
+
 // //   const handleBlur = () => {
 // //     setIsFocused(false);
 // //     setOpacity(0);
 // //   };
-  
+
 // //   const handleMouseEnter = () => {
 // //     setOpacity(0.6);
 // //   };
-  
+
 // //   const handleMouseLeave = () => {
 // //     setOpacity(0);
 // //   };
-  
+
 // //   return (
 // //     <div
 // //       ref={divRef}
@@ -410,7 +410,7 @@
 // //   const [selectedPollId, setSelectedPollId] = useState(null);
 // //   const [loading, setLoading] = useState(true);
 // //   const [copiedLink, setCopiedLink] = useState(null);
-  
+
 // //   const userEmail = session?.user?.email;
 // //   const firstName = userEmail 
 // //     ? userEmail.split('@')[0].replace(/[^a-zA-Z]/g, '') || 'User'
@@ -431,14 +431,14 @@
 // //           `)
 // //           .eq('created_by', user?.id)
 // //           .order('created_at', { ascending: false });
-          
+
 // //         if (error) throw error;
-        
+
 // //         const pollsWithTotals = data.map(poll => ({
 // //           ...poll,
 // //           totalVotes: poll.options.reduce((sum, option) => sum + option.votes_count, 0)
 // //         }));
-        
+
 // //         setPolls(pollsWithTotals);
 // //         setLoading(false);
 // //       } catch (error) {
@@ -446,7 +446,7 @@
 // //         setLoading(false);
 // //       }
 // //     };
-    
+
 // //     fetchPolls();
 // //   }, [user]);
 
@@ -508,7 +508,7 @@
 // //               Create, participate, and track polls in real-time with instant feedback and visualizations.
 // //             </p>
 // //           </div>
-          
+
 // //           <div className="flex flex-wrap gap-3">
 // //             <button 
 // //               onClick={handleCreatePoll}
@@ -532,7 +532,7 @@
 // //             </button>
 // //           </div>
 // //         </div>
-        
+
 // //         {/* Feature Cards with CardSwap */}
 // //         <div className="relative mb-20 h-[500px] md:h-[450px]">
 // //           <CardSwap
@@ -555,7 +555,7 @@
 // //                 </p>
 // //               </div>
 // //             </Card>
-            
+
 // //             <Card customClass="bg-gradient-to-br from-green-500/20 to-green-600/10 backdrop-blur-md border-green-500/30">
 // //               <div className="p-8 h-full flex flex-col justify-center">
 // //                 <div className="bg-green-500/30 w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
@@ -567,7 +567,7 @@
 // //                 </p>
 // //               </div>
 // //             </Card>
-            
+
 // //             <Card customClass="bg-gradient-to-br from-purple-500/20 to-purple-600/10 backdrop-blur-md border-purple-500/30">
 // //               <div className="p-8 h-full flex flex-col justify-center">
 // //                 <div className="bg-purple-500/30 w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
@@ -581,7 +581,7 @@
 // //             </Card>
 // //           </CardSwap>
 // //         </div>
-        
+
 // //         {/* Polls Section with SpotlightCard */}
 // //         <SpotlightCard className="p-8" spotlightColor="rgba(59, 130, 246, 0.15)">
 // //           <div className="flex justify-between items-center mb-6">
@@ -599,7 +599,7 @@
 // //               New Poll
 // //             </button>
 // //           </div>
-          
+
 // //           {loading ? (
 // //             <div className="flex justify-center items-center h-64">
 // //               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -646,12 +646,12 @@
 // //                           <Lock size={18} className="text-yellow-400 flex-shrink-0 ml-2" />
 // //                         )}
 // //                       </div>
-                      
+
 // //                       <div className="flex justify-between text-sm text-gray-400 mb-3">
 // //                         <span>{new Date(poll.created_at).toLocaleDateString()}</span>
 // //                         <span>{poll.totalVotes} total votes</span>
 // //                       </div>
-                      
+
 // //                       {poll.options && poll.options.length > 0 && (
 // //                         <div className="space-y-2 mb-3">
 // //                           {poll.options.map(option => (
@@ -662,7 +662,7 @@
 // //                           ))}
 // //                         </div>
 // //                       )}
-                      
+
 // //                       <button
 // //                         onClick={(e) => {
 // //                           e.stopPropagation();
@@ -686,7 +686,7 @@
 // //                   ))}
 // //                 </div>
 // //               </SpotlightCard>
-              
+
 // //               {/* Poll Display */}
 // //               <SpotlightCard className="p-6" spotlightColor="rgba(59, 130, 246, 0.1)">
 // //                 {selectedPollId ? (
@@ -827,31 +827,31 @@
 //   const [isFocused, setIsFocused] = useState(false);
 //   const [position, setPosition] = useState({ x: 0, y: 0 });
 //   const [opacity, setOpacity] = useState(0);
-  
+
 //   const handleMouseMove = e => {
 //     if (!divRef.current || isFocused) return;
 //     const rect = divRef.current.getBoundingClientRect();
 //     setPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
 //   };
-  
+
 //   const handleFocus = () => {
 //     setIsFocused(true);
 //     setOpacity(0.6);
 //   };
-  
+
 //   const handleBlur = () => {
 //     setIsFocused(false);
 //     setOpacity(0);
 //   };
-  
+
 //   const handleMouseEnter = () => {
 //     setOpacity(0.6);
 //   };
-  
+
 //   const handleMouseLeave = () => {
 //     setOpacity(0);
 //   };
-  
+
 //   return (
 //     <div
 //       ref={divRef}
@@ -881,7 +881,7 @@
 //   const [selectedPollId, setSelectedPollId] = useState(null);
 //   const [loading, setLoading] = useState(true);
 //   const [copiedLink, setCopiedLink] = useState(null);
-  
+
 //   const userEmail = session?.user?.email;
 //   const firstName = userEmail 
 //     ? userEmail.split('@')[0].replace(/[^a-zA-Z]/g, '') || 'User'
@@ -902,14 +902,14 @@
 //           `)
 //           .eq('created_by', user?.id)
 //           .order('created_at', { ascending: false });
-          
+
 //         if (error) throw error;
-        
+
 //         const pollsWithTotals = data.map(poll => ({
 //           ...poll,
 //           totalVotes: poll.options.reduce((sum, option) => sum + option.votes_count, 0)
 //         }));
-        
+
 //         setPolls(pollsWithTotals);
 //         setLoading(false);
 //       } catch (error) {
@@ -917,7 +917,7 @@
 //         setLoading(false);
 //       }
 //     };
-    
+
 //     fetchPolls();
 //   }, [user]);
 
@@ -979,7 +979,7 @@
 //               Create, participate, and track polls in real-time with instant feedback and visualizations.
 //             </p>
 //           </div>
-          
+
 //           <div className="flex flex-wrap gap-3">
 //             <button 
 //               onClick={handleCreatePoll}
@@ -1003,7 +1003,7 @@
 //             </button>
 //           </div>
 //         </div>
-        
+
 //         {/* Feature Cards with CardSwap */}
 //         <div className="relative mb-20 h-[500px] md:h-[450px]">
 //           <CardSwap
@@ -1026,7 +1026,7 @@
 //                 </p>
 //               </div>
 //             </Card>
-            
+
 //             <Card customClass="bg-gradient-to-br from-green-500/20 to-green-600/10 backdrop-blur-md border-green-500/30">
 //               <div className="p-8 h-full flex flex-col justify-center">
 //                 <div className="bg-green-500/30 w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
@@ -1038,7 +1038,7 @@
 //                 </p>
 //               </div>
 //             </Card>
-            
+
 //             <Card customClass="bg-gradient-to-br from-purple-500/20 to-purple-600/10 backdrop-blur-md border-purple-500/30">
 //               <div className="p-8 h-full flex flex-col justify-center">
 //                 <div className="bg-purple-500/30 w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
@@ -1052,7 +1052,7 @@
 //             </Card>
 //           </CardSwap>
 //         </div>
-        
+
 //         {/* Polls Section with SpotlightCard */}
 //         <SpotlightCard className="p-8" spotlightColor="rgba(59, 130, 246, 0.15)">
 //           <div className="flex justify-between items-center mb-6">
@@ -1070,7 +1070,7 @@
 //               New Poll
 //             </button>
 //           </div>
-          
+
 //           {loading ? (
 //             <div className="flex justify-center items-center h-64">
 //               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -1117,12 +1117,12 @@
 //                           <Lock size={18} className="text-yellow-400 flex-shrink-0 ml-2" />
 //                         )}
 //                       </div>
-                      
+
 //                       <div className="flex justify-between text-sm text-gray-400 mb-3">
 //                         <span>{new Date(poll.created_at).toLocaleDateString()}</span>
 //                         <span>{poll.totalVotes} total votes</span>
 //                       </div>
-                      
+
 //                       {poll.options && poll.options.length > 0 && (
 //                         <div className="space-y-2 mb-3">
 //                           {poll.options.map(option => (
@@ -1133,7 +1133,7 @@
 //                           ))}
 //                         </div>
 //                       )}
-                      
+
 //                       <button
 //                         onClick={(e) => {
 //                           e.stopPropagation();
@@ -1157,7 +1157,7 @@
 //                   ))}
 //                 </div>
 //               </SpotlightCard>
-              
+
 //               {/* Poll Display */}
 //               <SpotlightCard className="p-6" spotlightColor="rgba(59, 130, 246, 0.1)">
 //                 {selectedPollId ? (
@@ -1232,7 +1232,7 @@ import { BarChart3, Bookmark, PlusCircle, Users, LogOut, Lock, Copy, Check } fro
 import { motion, useMotionValue, useSpring } from 'framer-motion';
 import { gsap } from 'gsap';
 import { Observer } from 'gsap/Observer';
-import {toast} from 'sonner';
+import { toast } from 'sonner';
 
 gsap.registerPlugin(Observer);
 
@@ -1395,31 +1395,31 @@ const SpotlightCard = ({ children, className = '', spotlightColor = 'rgba(255, 2
   const [isFocused, setIsFocused] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [opacity, setOpacity] = useState(0);
-  
+
   const handleMouseMove = e => {
     if (!divRef.current || isFocused) return;
     const rect = divRef.current.getBoundingClientRect();
     setPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
   };
-  
+
   const handleFocus = () => {
     setIsFocused(true);
     setOpacity(0.6);
   };
-  
+
   const handleBlur = () => {
     setIsFocused(false);
     setOpacity(0);
   };
-  
+
   const handleMouseEnter = () => {
     setOpacity(0.6);
   };
-  
+
   const handleMouseLeave = () => {
     setOpacity(0);
   };
-  
+
   return (
     <div
       ref={divRef}
@@ -1491,9 +1491,9 @@ const Dashboard = () => {
   const [selectedPollId, setSelectedPollId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [copiedLink, setCopiedLink] = useState(null);
-  
+
   const userEmail = session?.user?.email;
-  const firstName = userEmail 
+  const firstName = userEmail
     ? userEmail.split('@')[0].replace(/[^a-zA-Z]/g, '') || 'User'
     : 'User';
 
@@ -1512,14 +1512,14 @@ const Dashboard = () => {
           `)
           .eq('created_by', user?.id)
           .order('created_at', { ascending: false });
-          
+
         if (error) throw error;
-        
+
         const pollsWithTotals = data.map(poll => ({
           ...poll,
           totalVotes: poll.options.reduce((sum, option) => sum + option.votes_count, 0)
         }));
-        
+
         setPolls(pollsWithTotals);
         setLoading(false);
       } catch (error) {
@@ -1527,7 +1527,7 @@ const Dashboard = () => {
         setLoading(false);
       }
     };
-    
+
     fetchPolls();
   }, [user]);
 
@@ -1540,9 +1540,9 @@ const Dashboard = () => {
       const link = `${window.location.origin}/polls/${pollId}`;
       await navigator.clipboard.writeText(link);
       setCopiedLink(pollId);
-      setTimeout(() => setCopiedLink(null),2000);
+      setTimeout(() => setCopiedLink(null), 2000);
       toast.success('Poll link copied to clipboard');
-    }catch(err){
+    } catch (err) {
       console.error('Error Copying link:', err);
       toast.error('Failed to copy link');
     }
@@ -1552,43 +1552,40 @@ const Dashboard = () => {
     <div className="min-h-screen relative overflow-hidden ">
       <div className="relative z-10 container mx-auto px-4 py-8">
 
-  <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12">
-    <div className="mb-6 md:mb-0">
-      <h1 className="text-[144px] font-normal text-white mb-4" 
-          style={{
-            fontFamily: 'Lato, sans-serif',
-            fontStyle: 'normal',
-            fontVariantCaps: 'normal',
-            fontVariantEastAsian: 'normal',
-            fontVariantLigatures: 'normal',
-            fontVariantNumeric: 'normal',
-            fontWeight: 700
-          }}>
-        Welcome back, <span className="text-blue-400">{firstName}!</span>
-      </h1>
-      <p className="text-xl text-gray-300 max-w-2xl leading-relaxed">
-        Create, participate, and track polls in real-time with instant feedback and visualizations.
-      </p>
-    </div>
-    
-    <div className="flex flex-wrap gap-4 ">
-      <button 
-        onClick={handleCreatePoll}
-        className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-8 py-3.5 rounded-xl font-medium flex items-center gap-3 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
-      >
-        <PlusCircle size={22} />
-        Create Poll
-      </button>
-      <button 
-        onClick={() => navigate('/polls')}
-        className="bg-white/10 hover:bg-white/20 backdrop-blur-lg border border-white/20 text-white px-8 py-3.5 rounded-xl font-medium flex items-center gap-3 transition-all duration-300 hover:shadow-lg"
-      >
-        <BarChart3 size={22} />
-        Browse Polls
-      </button>
-    </div>
-  </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-16">
+          <div className="mb-8 md:mb-0 relative z-10">
+            <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6 tracking-tight leading-tight "
+              style={{ fontFamily: 'Lato, sans-serif' }}>
+              Welcome back, <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-indigo-400 animate-gradient-x">
+                {firstName}!
+              </span>
+            </h1>
+            <p className="text-xl text-gray-400 max-w-2xl leading-relaxed font-light">
+              Create, participate, and track polls in real-time
+              <br />
+              <span className="text-gray-200 font-medium">with instant feedback and visualizations.</span>
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-4">
+            <button
+              onClick={handleCreatePoll}
+              className="group bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-8 py-4 rounded-2xl font-semibold flex items-center gap-3 transition-all duration-300 shadow-lg hover:shadow-blue-500/25 hover:-translate-y-1"
+            >
+              <PlusCircle size={24} className="group-hover:rotate-90 transition-transform duration-300" />
+              Create Poll
+            </button>
+            <button
+              onClick={() => navigate('/polls')}
+              className="group bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/10 text-white px-8 py-4 rounded-2xl font-semibold flex items-center gap-3 transition-all duration-300 hover:border-white/20 hover:-translate-y-1"
+            >
+              <BarChart3 size={24} className="group-hover:scale-110 transition-transform duration-300" />
+              Browse Polls
+            </button>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
           <SpotlightCard className="p-6" spotlightColor="rgba(34, 197, 94, 0.15)">
             <div className="flex items-center gap-3 mb-3">
               <div className="bg-green-500/20 p-3 rounded-lg">
@@ -1627,32 +1624,32 @@ const Dashboard = () => {
           </SpotlightCard>
         </div>
 
-<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10 mb-16">
-  <FeatureCard
-    icon={<PlusCircle size={24} className="text-blue-300" />}
-    title="Create Polls"
-    description="Create custom polls on any topic, add options, set permissions, and see responses in real-time."
-    gradientColors="from-blue-500/20 to-blue-600/10"
-    borderColor="border-blue-500/30"
-  />
-  
-  <FeatureCard
-    icon={<Users size={24} className="text-green-300" />}
-    title="Vote & Participate"
-    description="Browse public polls or join private ones. Cast your vote and see real-time results."
-    gradientColors="from-green-500/20 to-green-600/10"
-    borderColor="border-green-500/30"
-  />
-  
-  <FeatureCard
-    icon={<Bookmark size={24} className="text-purple-300" />}
-    title="Bookmark & Track"
-    description="Save polls for later, view past participation, and stay updated on topics you care about."
-    gradientColors="from-purple-500/20 to-purple-600/10"
-    borderColor="border-purple-500/30"
-  />
-</div>
-        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10 mb-16">
+          <FeatureCard
+            icon={<PlusCircle size={24} className="text-blue-300" />}
+            title="Create Polls"
+            description="Create custom polls on any topic, add options, set permissions, and see responses in real-time."
+            gradientColors="from-blue-500/20 to-blue-600/10"
+            borderColor="border-blue-500/30"
+          />
+
+          <FeatureCard
+            icon={<Users size={24} className="text-green-300" />}
+            title="Vote & Participate"
+            description="Browse public polls or join private ones. Cast your vote and see real-time results."
+            gradientColors="from-green-500/20 to-green-600/10"
+            borderColor="border-green-500/30"
+          />
+
+          <FeatureCard
+            icon={<Bookmark size={24} className="text-purple-300" />}
+            title="Bookmark & Track"
+            description="Save polls for later, view past participation, and stay updated on topics you care about."
+            gradientColors="from-purple-500/20 to-purple-600/10"
+            borderColor="border-purple-500/30"
+          />
+        </div>
+
         {/* Polls Section with SpotlightCard */}
         <SpotlightCard className="p-8" spotlightColor="rgba(59, 130, 246, 0.15)">
           <div className="flex justify-between items-center mb-6">
@@ -1662,7 +1659,7 @@ const Dashboard = () => {
               </div>
               <h2 className="text-3xl font-bold text-white">Your Polls</h2>
             </div>
-            <button 
+            <button
               onClick={handleCreatePoll}
               className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-colors"
             >
@@ -1670,7 +1667,7 @@ const Dashboard = () => {
               New Poll
             </button>
           </div>
-          
+
           {loading ? (
             <div className="flex justify-center items-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -1684,7 +1681,7 @@ const Dashboard = () => {
               </div>
               <h3 className="text-2xl font-semibold text-white mb-3">No polls yet</h3>
               <p className="text-gray-400 mb-6 text-lg">Create your first poll to get started</p>
-              <button 
+              <button
                 onClick={handleCreatePoll}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium flex items-center gap-2 mx-auto transition-colors"
               >
@@ -1702,13 +1699,12 @@ const Dashboard = () => {
                 </h3>
                 <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-blue-500/50 scrollbar-track-transparent">
                   {polls.map(poll => (
-                    <div 
-                      key={poll.id} 
-                      className={`p-5 rounded-xl cursor-pointer transition-all duration-200 border ${
-                        selectedPollId === poll.id 
-                          ? 'bg-blue-600/20 border-blue-500/50' 
-                          : 'bg-white/5 hover:bg-white/10 border-white/10'
-                      }`}
+                    <div
+                      key={poll.id}
+                      className={`p-5 rounded-xl cursor-pointer transition-all duration-200 border ${selectedPollId === poll.id
+                        ? 'bg-blue-600/20 border-blue-500/50'
+                        : 'bg-white/5 hover:bg-white/10 border-white/10'
+                        }`}
                       onClick={() => setSelectedPollId(poll.id)}
                     >
                       <div className="flex justify-between items-start mb-3">
@@ -1717,12 +1713,12 @@ const Dashboard = () => {
                           <Lock size={18} className="text-yellow-400 flex-shrink-0 ml-2" />
                         )}
                       </div>
-                      
+
                       <div className="flex justify-between text-sm text-gray-400 mb-3">
                         <span>{new Date(poll.created_at).toLocaleDateString()}</span>
                         <span>{poll.totalVotes} total votes</span>
                       </div>
-                      
+
                       {poll.options && poll.options.length > 0 && (
                         <div className="space-y-2 mb-3">
                           {poll.options.map(option => (
@@ -1733,7 +1729,7 @@ const Dashboard = () => {
                           ))}
                         </div>
                       )}
-                      
+
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -1757,7 +1753,7 @@ const Dashboard = () => {
                   ))}
                 </div>
               </SpotlightCard>
-              
+
               {/* Poll Display */}
               <SpotlightCard className="p-6" spotlightColor="rgba(59, 130, 246, 0.1)">
                 {selectedPollId ? (
@@ -1775,7 +1771,7 @@ const Dashboard = () => {
             </div>
           )}
         </SpotlightCard>
-        
+
       </div>
     </div>
   );

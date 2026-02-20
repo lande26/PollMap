@@ -15,13 +15,13 @@
 //   const [hasExpiration, setHasExpiration] = useState(false);
 //   const navigate = useNavigate();
 //   const { user } = UserAuth();
-  
+
 //   const addOption = () => {
 //     if (options.length < 10) { // Limit to 10 options
 //       setOptions([...options, '']);
 //     }
 //   };
-  
+
 //   const removeOption = (index) => {
 //     if (options.length > 2) { // Minimum 2 options
 //       const newOptions = [...options];
@@ -29,40 +29,40 @@
 //       setOptions(newOptions);
 //     }
 //   };
-  
+
 //   const handleOptionChange = (index, value) => {
 //     const newOptions = [...options];
 //     newOptions[index] = value;
 //     setOptions(newOptions);
 //   };
-  
+
 //   const handleSubmit = async (e) => {
 //     e.preventDefault();
-    
+
 //     // Validate form
 //     if (!question.trim()) {
 //       setError('Please enter a question');
 //       return;
 //     }
-    
+
 //     const validOptions = options.filter(opt => opt.trim() !== '');
 //     if (validOptions.length < 2) {
 //       setError('Please provide at least two options');
 //       return;
 //     }
-    
+
 //     // If password protection is enabled, validate password
 //     if (isPasswordProtected && !password.trim()) {
 //       setError('Please enter a password');
 //       return;
 //     }
-    
+
 //     // If expiration is enabled, validate expiration time
 //     if (hasExpiration && !expiresAt) {
 //       setError('Please set an expiration time');
 //       return;
 //     }
-    
+
 //     // If expiration is enabled, check if it's in the future
 //     if (hasExpiration && expiresAt) {
 //       const expirationDate = new Date(expiresAt);
@@ -71,10 +71,10 @@
 //         return;
 //       }
 //     }
-    
+
 //     setLoading(true);
 //     setError(null);
-    
+
 //     try {
 //       // Create the poll with all fields
 //       const { data: poll, error: pollError } = await supabase
@@ -88,31 +88,31 @@
 //         }])
 //         .select()
 //         .single();
-        
+
 //       if (pollError) throw pollError;
-      
+
 //       // Create the options
 //       const optionsToInsert = validOptions.map(option => ({
 //         poll_id: poll.id,
 //         option_text: option.trim()
 //       }));
-      
+
 //       const { error: optionsError } = await supabase
 //         .from('options')
 //         .insert(optionsToInsert);
-        
+
 //       if (optionsError) throw optionsError;
-      
+
 //       // Navigate to the poll page
 //       navigate(`/polls/${poll.id}`);
-      
+
 //     } catch (err) {
 //       console.error('Error creating poll:', err);
 //       setError('Failed to create poll. Please try again.');
 //       setLoading(false);
 //     }
 //   };
-  
+
 //   return (
 //     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-gray-900 to-black">
 //       {/* Background decoration */}
@@ -120,18 +120,18 @@
 //         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-900/20 to-transparent"></div>
 //         <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-purple-900/20 to-transparent"></div>
 //       </div>
-      
+
 //       <div className="relative z-10 container mx-auto px-4 py-8">
 //         <div className="max-w-2xl mx-auto">
 //           <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700">
 //             <h1 className="text-3xl font-bold text-white mb-6">Create a New Poll</h1>
-            
+
 //             {error && (
 //               <div className="bg-red-500/20 border border-red-500 text-red-200 p-4 rounded-lg mb-6">
 //                 {error}
 //               </div>
 //             )}
-            
+
 //             <form onSubmit={handleSubmit}>
 //               <div className="mb-6">
 //                 <label htmlFor="question" className="block text-white font-medium mb-2">
@@ -146,7 +146,7 @@
 //                   placeholder="What do you want to ask?"
 //                 />
 //               </div>
-              
+
 //               <div className="mb-6">
 //                 <div className="flex justify-between items-center mb-2">
 //                   <label className="block text-white font-medium">
@@ -162,7 +162,7 @@
 //                     Add Option
 //                   </button>
 //                 </div>
-                
+
 //                 <div className="space-y-3">
 //                   {options.map((option, index) => (
 //                     <div key={index} className="flex items-center gap-2">
@@ -186,7 +186,7 @@
 //                   ))}
 //                 </div>
 //               </div>
-              
+
 //               {/* Password Protection Section */}
 //               <div className="mb-6">
 //                 <div className="flex items-center gap-2 mb-4">
@@ -202,7 +202,7 @@
 //                     Password protect this poll
 //                   </label>
 //                 </div>
-                
+
 //                 {isPasswordProtected && (
 //                   <div>
 //                     <label htmlFor="password" className="block text-white font-medium mb-2">
@@ -222,7 +222,7 @@
 //                   </div>
 //                 )}
 //               </div>
-              
+
 //               {/* Expiration Time Section */}
 //               <div className="mb-6">
 //                 <div className="flex items-center gap-2 mb-4">
@@ -238,7 +238,7 @@
 //                     Set expiration time
 //                   </label>
 //                 </div>
-                
+
 //                 {hasExpiration && (
 //                   <div>
 //                     <label htmlFor="expiresAt" className="block text-white font-medium mb-2">
@@ -257,7 +257,7 @@
 //                   </div>
 //                 )}
 //               </div>
-              
+
 //               <div className="flex justify-end gap-3">
 //                 <button
 //                   type="button"
@@ -326,7 +326,7 @@ const CreatePoll = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const {user} = UserAuth();
+  const { user } = UserAuth();
 
   useEffect(() => {
     if (location.state?.ocrData) {
@@ -335,13 +335,13 @@ const CreatePoll = () => {
       setOptions(options);
     }
   }, [location.state]);
-  
+
   const addOption = () => {
     if (options.length < 10) {
       setOptions([...options, '']);
     }
   };
-  
+
   const removeOption = (index) => {
     if (options.length > 2) {
       const newOptions = [...options];
@@ -349,37 +349,37 @@ const CreatePoll = () => {
       setOptions(newOptions);
     }
   };
-  
+
   const handleOptionChange = (index, value) => {
     const newOptions = [...options];
     newOptions[index] = value;
     setOptions(newOptions);
   };
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!question.trim()) {
       setError('Please enter a question');
       return;
     }
-    
+
     const validOptions = options.filter(opt => opt.trim() !== '');
     if (validOptions.length < 2) {
       setError('Please provide at least two options');
       return;
     }
-    
+
     if (isPasswordProtected && !password.trim()) {
       setError('Please enter a password');
       return;
     }
-    
+
     if (hasExpiration && !expiresAt) {
       setError('Please set an expiration time');
       return;
     }
-    
+
     if (hasExpiration && expiresAt) {
       const expirationDate = new Date(expiresAt);
       if (expirationDate <= new Date()) {
@@ -387,39 +387,44 @@ const CreatePoll = () => {
         return;
       }
     }
-    
+
     setLoading(true);
     setError(null);
-    
-    try{
-      const {data:poll, error:pollError} = await supabase
+
+    try {
+      const { data: poll, error: pollError } = await supabase
         .from('polls')
         .insert([{
           question: question.trim(),
           created_by: user?.id,
           is_password_protected: isPasswordProtected,
           password_hash: isPasswordProtected ? password : null,
-          expires_at: hasExpiration ? expiresAt : null
+          expires_at: hasExpiration ? expiresAt : null,
+          room_id: location.state?.roomId || null
         }])
         .select()
         .single();
 
-        if(pollError) throw pollError;
+      if (pollError) throw pollError;
 
-        const optionsToInsert = validOptions.map(option => ({
-          poll_id: poll.id,
-          option_text: option.trim()
-        }));
+      const optionsToInsert = validOptions.map(option => ({
+        poll_id: poll.id,
+        option_text: option.trim()
+      }));
 
-        const {error:optionsError} = await supabase
-          .from('options')
-          .insert(optionsToInsert);
+      const { error: optionsError } = await supabase
+        .from('options')
+        .insert(optionsToInsert);
 
-        if(optionsError) throw optionsError;
+      if (optionsError) throw optionsError;
 
+      if (location.state?.roomId) {
+        navigate(`/rooms/${location.state.roomCode}?newPollId=${poll.id}`);
+      } else {
         navigate(`/polls/${poll.id}`);
+      }
 
-    }catch(err){
+    } catch (err) {
       console.error('Error creating poll:', err);
       setError(err.message);
       setLoading(false);
@@ -440,7 +445,7 @@ const CreatePoll = () => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFileUpload(e.dataTransfer.files[0]);
     }
@@ -495,7 +500,7 @@ const CreatePoll = () => {
     try {
       // Get API key from environment variable
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-      
+
       if (!apiKey) {
         throw new Error('Gemini API key not configured. Please add VITE_GEMINI_API_KEY to your .env file');
       }
@@ -552,11 +557,11 @@ const CreatePoll = () => {
       fileInputRef.current.value = '';
     }
   };
-  
+
   return (
     <div className="min-h-screen relative py-8 px-4">
       <div className="absolute inset-0 bg-gradient-to-b via-transparent pointer-events-none" />
-      
+
       <div className="relative z-10 container mx-auto max-w-7xl">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-3 px-4 py-2 rounded-full bg-indigo-500/15 border border-indigo-400/30 backdrop-blur-md">
@@ -581,7 +586,7 @@ const CreatePoll = () => {
               </CardTitle>
               <p className="text-gray-400 text-sm">Create your poll from scratch</p>
             </CardHeader>
-            
+
             <CardContent className="pt-6 space-y-6">
               {error && (
                 <div className="bg-red-500/15 border border-red-400/40 text-red-200 px-3 py-3 rounded-lg flex items-start backdrop-blur-sm">
@@ -589,7 +594,7 @@ const CreatePoll = () => {
                   <div className="text-sm">{error}</div>
                 </div>
               )}
-              
+
               <div className="space-y-2">
                 <Label htmlFor="question" className="text-white font-medium text-sm">
                   Poll Question
@@ -602,7 +607,7 @@ const CreatePoll = () => {
                   placeholder="What would you like to ask?"
                 />
               </div>
-              
+
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <Label className="text-white font-medium text-sm">
@@ -620,7 +625,7 @@ const CreatePoll = () => {
                     Add
                   </Button>
                 </div>
-                
+
                 <div className="space-y-2">
                   {options.map((option, index) => (
                     <div key={index} className="flex items-center gap-2 group">
@@ -654,101 +659,88 @@ const CreatePoll = () => {
                   {options.length < 10 ? `${10 - options.length} more available` : "Max reached"}
                 </p>
               </div>
-              
+
               <div className="space-y-3">
                 <Label className="text-white font-medium text-sm">Poll Settings</Label>
-                
-                <Tabs defaultValue="security" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 bg-[#0a0f1c]/40 backdrop-blur-sm border border-indigo-400/20 p-1 h-10">
-                    <TabsTrigger 
-                      value="security" 
-                      className="data-[state=active]:bg-indigo-500/25 data-[state=active]:text-white text-gray-400 transition-all text-xs"
-                    >
-                      <Lock size={14} className="mr-1.5" />
-                      Security
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="timing" 
-                      className="data-[state=active]:bg-indigo-500/25 data-[state=active]:text-white text-gray-400 transition-all text-xs"
-                    >
-                      <Clock size={14} className="mr-1.5" />
-                      Timing
-                    </TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="security" className="mt-4 p-4 rounded-lg bg-[#0a0f1c]/30 backdrop-blur-sm border border-indigo-400/20">
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label htmlFor="passwordProtection" className="text-white font-medium cursor-pointer text-sm">
-                            Password Protection
-                          </Label>
-                          <p className="text-xs text-gray-400">Restrict with password</p>
-                        </div>
-                        <Switch
-                          id="passwordProtection"
-                          checked={isPasswordProtected}
-                          onCheckedChange={setIsPasswordProtected}
-                          className="data-[state=checked]:bg-indigo-500"
+
+
+                <div className="space-y-6 bg-[#0a0f1c]/30 backdrop-blur-sm border border-indigo-400/20 p-4 rounded-lg">
+                  {/* Password Protection Section */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="passwordProtection" className="text-white font-medium cursor-pointer text-sm">
+                          Password Protection
+                        </Label>
+                        <p className="text-xs text-gray-400">Restrict access with a password</p>
+                      </div>
+                      <Switch
+                        id="passwordProtection"
+                        checked={isPasswordProtected}
+                        onCheckedChange={setIsPasswordProtected}
+                        className="data-[state=checked]:bg-indigo-500"
+                      />
+                    </div>
+
+                    {isPasswordProtected && (
+                      <div className="space-y-1.5 pt-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                        <Label htmlFor="password" className="text-white font-medium text-sm">
+                          Password
+                        </Label>
+                        <Input
+                          type="password"
+                          id="password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="h-9 bg-[#060a14]/60 border-indigo-400/20 text-white placeholder:text-gray-500 focus:border-indigo-400/50 focus:ring-2 focus:ring-indigo-500/20 text-sm"
+                          placeholder="Enter password"
                         />
                       </div>
-                      
-                      {isPasswordProtected && (
-                        <div className="space-y-1.5 pt-1">
-                          <Label htmlFor="password" className="text-white font-medium text-sm">
-                            Password
-                          </Label>
-                          <Input
-                            type="password"
-                            id="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="h-9 bg-[#060a14]/60 border-indigo-400/20 text-white placeholder:text-gray-500 focus:border-indigo-400/50 focus:ring-2 focus:ring-indigo-500/20 text-sm"
-                            placeholder="Enter password"
-                          />
-                        </div>
-                      )}
+                    )}
+                  </div>
+
+                  <Separator className="bg-indigo-500/20" />
+
+                  {/* Expiration Section */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="expiration" className="text-white font-medium cursor-pointer text-sm">
+                          Auto-Close Poll
+                        </Label>
+                        <p className="text-xs text-gray-400">Set an expiration date and time</p>
+                      </div>
+                      <Switch
+                        id="expiration"
+                        checked={hasExpiration}
+                        onCheckedChange={setHasExpiration}
+                        className="data-[state=checked]:bg-indigo-500"
+                      />
                     </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="timing" className="mt-4 p-4 rounded-lg bg-[#0a0f1c]/30 backdrop-blur-sm border border-indigo-400/20">
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label htmlFor="expiration" className="text-white font-medium cursor-pointer text-sm">
-                            Auto-Close Poll
-                          </Label>
-                          <p className="text-xs text-gray-400">Set expiration date</p>
-                        </div>
-                        <Switch
-                          id="expiration"
-                          checked={hasExpiration}
-                          onCheckedChange={setHasExpiration}
-                          className="data-[state=checked]:bg-indigo-500"
+
+                    {hasExpiration && (
+                      <div className="space-y-1.5 pt-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                        <Label htmlFor="expiresAt" className="text-white font-medium text-sm">
+                          Expires At
+                        </Label>
+                        <Input
+                          type="datetime-local"
+                          id="expiresAt"
+                          value={expiresAt}
+                          onChange={(e) => setExpiresAt(e.target.value)}
+                          className="h-9 bg-[#060a14]/60 border-indigo-400/20 text-white focus:border-indigo-400/50 focus:ring-2 focus:ring-indigo-500/20 text-sm"
+                          style={{ colorScheme: 'dark' }}
                         />
                       </div>
-                      
-                      {hasExpiration && (
-                        <div className="space-y-1.5 pt-1">
-                          <Label htmlFor="expiresAt" className="text-white font-medium text-sm">
-                            Expires At
-                          </Label>
-                          <Input
-                            type="datetime-local"
-                            id="expiresAt"
-                            value={expiresAt}
-                            onChange={(e) => setExpiresAt(e.target.value)}
-                            className="h-9 bg-[#060a14]/60 border-indigo-400/20 text-white focus:border-indigo-400/50 focus:ring-2 focus:ring-indigo-500/20 text-sm"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </TabsContent>
-                </Tabs>
+                    )}
+                  </div>
+                </div>
+
+
               </div>
-              
+
               <Separator className="my-4 bg-indigo-500/20" />
-              
+
               <div className="flex justify-end gap-3">
                 <Button
                   type="button"
@@ -773,6 +765,7 @@ const CreatePoll = () => {
                     <>
                       <Sparkles className="mr-2 h-4 w-4" />
                       Create Poll
+                      {location.state?.roomId && <span className="ml-1 text-xs opacity-80">(in Room)</span>}
                     </>
                   )}
                 </Button>
@@ -789,14 +782,13 @@ const CreatePoll = () => {
               </CardTitle>
               <p className="text-gray-400 text-sm">Upload and let AI do the work</p>
             </CardHeader>
-            
+
             <CardContent className="pt-6 space-y-5">
               <div
-                className={`relative border-2 border-dashed rounded-xl p-8 transition-all ${
-                  dragActive 
-                    ? 'border-purple-400 bg-purple-500/10' 
-                    : 'border-purple-400/30 bg-[#0a0f1c]/20'
-                }`}
+                className={`relative border-2 border-dashed rounded-xl p-8 transition-all ${dragActive
+                  ? 'border-purple-400 bg-purple-500/10'
+                  : 'border-purple-400/30 bg-[#0a0f1c]/20'
+                  }`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
@@ -810,7 +802,7 @@ const CreatePoll = () => {
                   className="hidden"
                   id="file-upload"
                 />
-                
+
                 <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center">
                   <div className="w-16 h-16 rounded-full bg-purple-500/20 flex items-center justify-center mb-4">
                     <Upload className="w-8 h-8 text-purple-300" />

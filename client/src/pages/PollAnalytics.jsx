@@ -1,22 +1,24 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSocketContext } from '../context/SocketContext';
 import { UserAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
+import { toPng } from 'html-to-image';
+import { jsPDF } from 'jspdf';
 import { ResponsiveBar } from '@nivo/bar';
 import { ResponsivePie } from '@nivo/pie';
 import { ResponsiveLine } from '@nivo/line';
 import { ResponsiveRadar } from '@nivo/radar';
-import { 
-  Card, CardContent, CardDescription, CardHeader, CardTitle 
+import {
+  Card, CardContent, CardDescription, CardHeader, CardTitle
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Calendar, Users, TrendingUp, BarChart3, Vote, Shield, 
+import {
+  Calendar, Users, TrendingUp, BarChart3, Vote, Shield,
   Clock, Trophy, ArrowLeft, Activity, Download, Eye, Share2,
   FileText, Filter, ChevronDown, Zap, MessageSquare, BarChart4,
   PieChart, LineChart, Target, TrendingUp as TrendingUpIcon
@@ -34,7 +36,8 @@ const PollAnalytics = () => {
   const [activeChart, setActiveChart] = useState('bar');
   const [isExpired, setIsExpired] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
-  
+  const contentRef = useRef(null);
+
   const socketContext = useSocketContext();
   const socket = socketContext?.socket;
   const { user } = UserAuth();
@@ -43,7 +46,7 @@ const PollAnalytics = () => {
   const fetchPoll = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       const { data: pollData, error: pollError } = await supabase
         .from('polls')
         .select(`
@@ -54,11 +57,11 @@ const PollAnalytics = () => {
         `)
         .eq('id', pollId)
         .single();
-        
+
       if (pollError) throw pollError;
 
       const isExpiredNow = pollData.expires_at && new Date(pollData.expires_at) < new Date();
-      
+
       const totalVotes = pollData.options.reduce((sum, opt) => sum + opt.votes_count, 0);
       const processedPoll = { ...pollData, totalVotes };
 
@@ -86,17 +89,17 @@ const PollAnalytics = () => {
   // Socket connection
   useEffect(() => {
     if (!socket || !pollId || pollId === "undefined") return;
-    
+
     socket.emit("joinPoll", pollId);
-    
+
     const handlePollUpdate = (data) => {
       if (data.data.id === pollId) {
         setPoll(data.data);
       }
     };
-    
+
     socket.on("pollDataUpdated", handlePollUpdate);
-    
+
     return () => {
       socket.off("pollDataUpdated", handlePollUpdate);
       socket.emit("leavePoll", pollId);
@@ -105,7 +108,7 @@ const PollAnalytics = () => {
 
   const getTopChoice = useCallback((options) => {
     if (!options || options.length === 0) return null;
-    return options.reduce((prev, current) => 
+    return options.reduce((prev, current) =>
       (prev.votes_count > current.votes_count) ? prev : current
     );
   }, []);
@@ -173,7 +176,7 @@ const PollAnalytics = () => {
             </div>
             <h3 className="text-xl font-semibold text-white mb-2">Unable to Load Analytics</h3>
             <p className="text-gray-300 mb-4">{error}</p>
-            <Button 
+            <Button
               onClick={fetchPoll}
               className="bg-blue-600 hover:bg-blue-700 text-white"
             >
@@ -192,7 +195,7 @@ const PollAnalytics = () => {
           <CardContent className="pt-6">
             <h3 className="text-xl font-semibold text-white mb-2">Poll Not Found</h3>
             <p className="text-gray-300 mb-4">The poll you're looking for doesn't exist or has been removed.</p>
-            <Button 
+            <Button
               onClick={() => navigate('/polls')}
               className="bg-blue-600 hover:bg-blue-700 text-white"
             >
@@ -206,10 +209,10 @@ const PollAnalytics = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br ">
-      
+
 
       {/* Main Content */}
-      <div className="pt-20 px-6 pb-6">
+      <div className="pt-20 px-6 pb-6" ref={contentRef}>
         <div className="max-w-7xl mx-auto">
           {/* Key Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -227,7 +230,7 @@ const PollAnalytics = () => {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card className="bg-[#10172A]/80 backdrop-blur border border-gray-700">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -242,24 +245,24 @@ const PollAnalytics = () => {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card className="bg-[#10172A]/80 backdrop-blur border border-gray-700">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="min-w-0 flex-1 mr-2">
                     <p className="text-gray-400 text-sm">Top Choice</p>
-                    <p className="text-xl font-bold text-white truncate">
+                    <p className="text-xl font-bold text-white truncate" title={getTopChoice(poll.options)?.option_text}>
                       {getTopChoice(poll.options)?.option_text || 'N/A'}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">Most selected</p>
                   </div>
-                  <div className="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center">
+                  <div className="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
                     <Trophy className="h-6 w-6 text-yellow-400" />
                   </div>
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card className="bg-[#10172A]/80 backdrop-blur border border-gray-700">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -340,7 +343,7 @@ const PollAnalytics = () => {
                 Breakdown
               </TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="overview" className="mt-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Top Choice Card */}
@@ -361,17 +364,17 @@ const PollAnalytics = () => {
                         .sort((a, b) => b.votes_count - a.votes_count)
                         .slice(0, 3)
                         .map((option, index) => {
-                          const percentage = poll.totalVotes > 0 
-                            ? Math.round((option.votes_count / poll.totalVotes) * 100) 
+                          const percentage = poll.totalVotes > 0
+                            ? Math.round((option.votes_count / poll.totalVotes) * 100)
                             : 0;
                           return (
                             <div key={option.id} className="flex items-center justify-between py-2 border-b border-gray-700 last:border-0">
-                              <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" 
-                                     style={{ backgroundColor: NIVO_COLORS[index % NIVO_COLORS.length] }}>
+                              <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
+                                <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                                  style={{ backgroundColor: NIVO_COLORS[index % NIVO_COLORS.length] }}>
                                   {index + 1}
                                 </div>
-                                <span className="text-white">{option.option_text}</span>
+                                <span className="text-white truncate" title={option.option_text}>{option.option_text}</span>
                               </div>
                               <div className="flex items-center gap-2">
                                 <span className="text-white font-medium">{option.votes_count}</span>
@@ -421,7 +424,7 @@ const PollAnalytics = () => {
                 </Card>
               </div>
             </TabsContent>
-            
+
             <TabsContent value="charts" className="mt-6">
               <Card className="bg-[#10172A]/80 backdrop-blur border border-gray-700">
                 <CardHeader>
@@ -438,11 +441,10 @@ const PollAnalytics = () => {
                           key={key}
                           variant={activeChart === key ? "default" : "outline"}
                           onClick={() => setActiveChart(key)}
-                          className={`flex items-center gap-2 ${
-                            activeChart === key 
-                              ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                              : 'bg-[#0D1425] text-white border-gray-600 hover:bg-[#1a2332]'
-                          }`}
+                          className={`flex items-center gap-2 ${activeChart === key
+                            ? 'bg-blue-600 text-white hover:bg-blue-700'
+                            : 'bg-[#0D1425] text-white border-gray-600 hover:bg-[#1a2332]'
+                            }`}
                         >
                           <Icon className="h-4 w-4" />
                           {label}
@@ -656,7 +658,7 @@ const PollAnalytics = () => {
                 </CardContent>
               </Card>
             </TabsContent>
-            
+
             <TabsContent value="breakdown" className="mt-6">
               <Card className="bg-[#10172A]/80 backdrop-blur border border-gray-700">
                 <CardHeader>
@@ -665,15 +667,15 @@ const PollAnalytics = () => {
                 <CardContent>
                   <div className="space-y-6">
                     {poll.options?.map((option, index) => {
-                      const percentage = poll.totalVotes > 0 
-                        ? Math.round((option.votes_count / poll.totalVotes) * 100) 
+                      const percentage = poll.totalVotes > 0
+                        ? Math.round((option.votes_count / poll.totalVotes) * 100)
                         : 0;
                       return (
                         <div key={option.id} className="space-y-3">
                           <div className="flex justify-between items-center">
                             <div className="flex items-center gap-3">
-                              <div 
-                                className="w-4 h-4 rounded-full" 
+                              <div
+                                className="w-4 h-4 rounded-full"
                                 style={{ backgroundColor: NIVO_COLORS[index % NIVO_COLORS.length] }}
                               />
                               <span className="text-white font-medium text-lg">{option.option_text}</span>
@@ -698,12 +700,44 @@ const PollAnalytics = () => {
           </Tabs>
 
           {/* Export Options */}
-          <div className="flex justify-end gap-3 mt-8">
+          <div className="flex flex-col sm:flex-row justify-end gap-3 mt-8 pb-8">
             <Button
               variant="outline"
               className="border-gray-600 bg-[#0D1425] hover:bg-[#1a2332] text-white"
-              onClick={() => {
-                toast.info('PDF export coming soon!');
+              onClick={async () => {
+                if (!contentRef.current) return;
+                try {
+                  toast.loading('Generating PDF...');
+
+                  // Clone the element to capture full height
+                  const element = contentRef.current;
+                  const clone = element.cloneNode(true);
+                  clone.style.position = 'absolute';
+                  clone.style.top = '-9999px';
+                  clone.style.left = '-9999px';
+                  clone.style.width = `${element.offsetWidth}px`;
+                  clone.style.height = 'auto';
+                  clone.style.overflow = 'visible';
+                  document.body.appendChild(clone);
+
+                  const dataUrl = await toPng(clone, { cacheBust: true });
+                  document.body.removeChild(clone);
+
+                  const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'px',
+                    format: [element.offsetWidth, element.scrollHeight]
+                  });
+
+                  pdf.addImage(dataUrl, 'PNG', 0, 0, element.offsetWidth, element.scrollHeight);
+                  pdf.save(`poll-analytics-${pollId}.pdf`);
+                  toast.dismiss();
+                  toast.success('PDF exported successfully');
+                } catch (err) {
+                  console.error("Export failed:", err);
+                  toast.dismiss();
+                  toast.error('Failed to export PDF');
+                }
               }}
             >
               <Download className="mr-2 h-4 w-4" />
@@ -712,8 +746,36 @@ const PollAnalytics = () => {
             <Button
               variant="outline"
               className="border-gray-600 bg-[#0D1425] hover:bg-[#1a2332] text-white"
-              onClick={() => {
-                toast.info('Image export coming soon!');
+              onClick={async () => {
+                if (!contentRef.current) return;
+                try {
+                  toast.loading('Generating Image...');
+
+                  // Clone for full height capture
+                  const element = contentRef.current;
+                  const clone = element.cloneNode(true);
+                  clone.style.position = 'absolute';
+                  clone.style.top = '-9999px';
+                  clone.style.left = '-9999px';
+                  clone.style.width = `${element.offsetWidth}px`;
+                  clone.style.height = 'auto';
+                  clone.style.overflow = 'visible';
+                  document.body.appendChild(clone);
+
+                  const dataUrl = await toPng(clone, { cacheBust: true });
+                  document.body.removeChild(clone);
+
+                  const link = document.createElement('a');
+                  link.download = `poll-analytics-${pollId}.png`;
+                  link.href = dataUrl;
+                  link.click();
+                  toast.dismiss();
+                  toast.success('Image exported successfully');
+                } catch (err) {
+                  console.error("Export failed:", err);
+                  toast.dismiss();
+                  toast.error('Failed to export Image');
+                }
               }}
             >
               <Download className="mr-2 h-4 w-4" />
