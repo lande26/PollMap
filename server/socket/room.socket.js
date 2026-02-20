@@ -4,10 +4,7 @@ import { randomUUID } from 'crypto';
 import dotenv from 'dotenv';
 dotenv.config();
 
-/**
- * Create a Supabase client authenticated as the socket user.
- * This ensures RLS policies (e.g. auth.uid() = host_id) are satisfied.
- */
+
 function getUserSupabase(socket) {
     const token = socket.handshake?.auth?.token;
     if (!token) return supabase; // fallback to default (anon)
@@ -25,9 +22,7 @@ function getUserSupabase(socket) {
     );
 }
 
-/**
- * Generate a unique 6-character alphanumeric room code.
- */
+
 function generateRoomCode() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no I/O/0/1 to avoid confusion
     let code = '';
@@ -37,10 +32,7 @@ function generateRoomCode() {
     return code;
 }
 
-/**
- * Unified Room + Q&A socket handler.
- * All events use `io.to(roomCode)` for broadcasting.
- */
+
 export const handleRoomSocket = (io, pubClient) => {
     io.on('connection', (socket) => {
 
