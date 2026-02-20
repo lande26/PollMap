@@ -698,7 +698,7 @@ const Polls = ({ pollId, isDashboardView = false }) => {
               )}
             </CardHeader>
             <CardContent className="pt-6">
-              {!hasVoted ? (
+              {!hasVoted && !isDashboardView ? (
                 <div className="space-y-4">
                   <h3 className="text-xl font-semibold text-white text-center mb-6">Cast Your Vote</h3>
                   {poll.options.map((option) => (
@@ -748,19 +748,21 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Check className="h-8 w-8 text-green-400" />
+                  {!isDashboardView && (
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Check className="h-8 w-8 text-green-400" />
+                      </div>
+                      <h3 className="text-2xl font-semibold text-white mb-2">Thank You for Voting!</h3>
+                      {userVote && (
+                        <p className="text-gray-300 text-lg">
+                          You voted for: <span className="text-blue-400 font-semibold">
+                            {poll.options.find(opt => opt.id === userVote.option_id)?.option_text}
+                          </span>
+                        </p>
+                      )}
                     </div>
-                    <h3 className="text-2xl font-semibold text-white mb-2">Thank You for Voting!</h3>
-                    {userVote && (
-                      <p className="text-gray-300 text-lg">
-                        You voted for: <span className="text-blue-400 font-semibold">
-                          {poll.options.find(opt => opt.id === userVote.option_id)?.option_text}
-                        </span>
-                      </p>
-                    )}
-                  </div>
+                  )}
 
                   <div className="bg-[#0D1425]/50 rounded-xl p-6 border border-gray-700">
                     <h4 className="text-xl font-semibold text-white text-center mb-6">Live Results</h4>
@@ -815,25 +817,23 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                   </div>
 
                   {/* Action Buttons */}
-                  {!isDashboardView && (
-                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                      <Button
-                        onClick={() => navigate(`/polls/${pollId}/analytics`)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white"
-                      >
-                        <Activity className="mr-2 h-4 w-4" />
-                        Advanced Analytics
-                      </Button>
-                      <Button
-                        onClick={() => openShareModal(poll)}
-                        variant="outline"
-                        className="border-gray-600 bg-[#0D1425] hover:bg-[#1a2332] text-white"
-                      >
-                        <Share2 className="mr-2 h-4 w-4" />
-                        Share Results
-                      </Button>
-                    </div>
-                  )}
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button
+                      onClick={() => navigate(`/polls/${pollId}/analytics`)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      <Activity className="mr-2 h-4 w-4" />
+                      {isDashboardView ? 'View Full Analytics' : 'Advanced Analytics'}
+                    </Button>
+                    <Button
+                      onClick={() => openShareModal(poll)}
+                      variant="outline"
+                      className="border-gray-600 bg-[#0D1425] hover:bg-[#1a2332] text-white"
+                    >
+                      <Share2 className="mr-2 h-4 w-4" />
+                      Share Results
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardContent>
