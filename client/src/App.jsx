@@ -193,7 +193,7 @@ function App() {
               },
               {
                 path: '/rooms',
-                element: <ProtectedRoute><Layout showHeader={true}><Rooms /></Layout></ProtectedRoute>,
+                element: <ProtectedRoute><Layout showHeader={true}><RoomsPage /></Layout></ProtectedRoute>,
               },
               {
                 path: '/rooms/:roomCode',

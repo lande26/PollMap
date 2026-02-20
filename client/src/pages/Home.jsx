@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
 import { BarChart3, Bookmark, Users, ArrowRight, PlusCircle, Activity } from 'lucide-react';
+import { UserAuth } from '../context/AuthContext';
 
 const springValues = {
   damping: 30,
@@ -211,6 +212,13 @@ const SpotlightCard = ({ children, className = '', spotlightColor = 'rgba(255, 2
 
 const Home = () => {
   const navigate = useNavigate();
+  const { user, loading } = UserAuth();
+
+  React.useEffect(() => {
+    if (user && !loading) {
+      navigate('/dashboard');
+    }
+  }, [user, loading, navigate]);
 
   return (
     <div className="min-h-screen relative overflow-hidden flex flex-col items-center justify-center py-20">
