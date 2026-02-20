@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { Routes, Route, BrowserRouter } from 'react-router-dom'
+import { RouterProvider, createBrowserRouter, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from './context/AuthContext.jsx'
 import Login from './pages/Login.jsx'
@@ -154,94 +154,56 @@ function App() {
                 zIndex: 1
               }}
             />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={
-                  <Layout showHeader={true}>
-                    <Home />
-                  </Layout>
-                } />
-
-                <Route path="/login" element={
-                  <Layout showHeader={false} showFooter={false}>
-                    <Login />
-                  </Layout>
-                } />
-
-                <Route path="/signup" element={
-                  <Layout showHeader={false} showFooter={false}>
-                    <Signup />
-                  </Layout>
-                } />
-
-                <Route path="/dashboard" element={
-                  <ProtectedRoute>
-                    <Layout showHeader={true}>
-                      <Dashboard />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-
-                <Route path="/profile" element={
-                  <ProtectedRoute>
-                    <Layout showHeader={true}>
-                      <Profile />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/polls" element={
-                  <ProtectedRoute>
-                    <Layout showHeader={true}>
-                      <Polls />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/create-poll" element={
-                  <ProtectedRoute>
-                    <Layout showHeader={true}>
-                      <CreatePoll />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-
-                <Route path="/polls/:pollId" element={
-                  <ProtectedRoute>
-                    <Layout showHeader={true}>
-                      <PollPage />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/polls/:pollId/analytics" element={
-                  <ProtectedRoute>
-                    <Layout showHeader={true}>
-                      <PollAnalytics />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-
-                <Route path="/rooms" element={
-                  <ProtectedRoute>
-                    <Layout showHeader={true}>
-                      <RoomsPage />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/rooms/:roomCode" element={
-                  <ProtectedRoute>
-                    <Layout showHeader={true}>
-                      <RoomPage />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/rooms/join/:token" element={
-                  <ProtectedRoute>
-                    <Layout showHeader={true}>
-                      <JoinRoomByLink />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-              </Routes>
-            </BrowserRouter>
+            <RouterProvider router={createBrowserRouter([
+              {
+                path: '/',
+                element: <Layout showHeader={true}><Home /></Layout>,
+              },
+              {
+                path: '/login',
+                element: <Layout showHeader={false} showFooter={false}><Login /></Layout>,
+              },
+              {
+                path: '/signup',
+                element: <Layout showHeader={false} showFooter={false}><Signup /></Layout>,
+              },
+              {
+                path: '/dashboard',
+                element: <ProtectedRoute><Layout showHeader={true}><Dashboard /></Layout></ProtectedRoute>,
+              },
+              {
+                path: '/profile',
+                element: <ProtectedRoute><Layout showHeader={true}><Profile /></Layout></ProtectedRoute>,
+              },
+              {
+                path: '/polls',
+                element: <ProtectedRoute><Layout showHeader={true}><Polls /></Layout></ProtectedRoute>,
+              },
+              {
+                path: '/create-poll',
+                element: <ProtectedRoute><Layout showHeader={true}><CreatePoll /></Layout></ProtectedRoute>,
+              },
+              {
+                path: '/polls/:pollId',
+                element: <ProtectedRoute><Layout showHeader={true}><PollPage /></Layout></ProtectedRoute>,
+              },
+              {
+                path: '/polls/:pollId/analytics',
+                element: <ProtectedRoute><Layout showHeader={true}><PollAnalytics /></Layout></ProtectedRoute>,
+              },
+              {
+                path: '/rooms',
+                element: <ProtectedRoute><Layout showHeader={true}><Rooms /></Layout></ProtectedRoute>,
+              },
+              {
+                path: '/rooms/:roomCode',
+                element: <ProtectedRoute><Layout showHeader={true}><RoomPage /></Layout></ProtectedRoute>,
+              },
+              {
+                path: '/rooms/join/:token',
+                element: <ProtectedRoute><Layout showHeader={true}><JoinRoomByLink /></Layout></ProtectedRoute>,
+              },
+            ])} />
           </SocketContextProvider>
         </AuthProvider>
       </QueryClientProvider>
