@@ -1,6 +1,6 @@
 // Profile.jsx
 import React, { useState, useEffect } from 'react';
-import { User, BarChart3, Users, TrendingUp, PieChart, Download, Copy, Eye, Vote, Calendar, Clock, Shield, Zap } from 'lucide-react';
+import { User, BarChart3, Users, TrendingUp, PieChart, Download, Copy, Eye, Vote, Calendar, Clock, Shield, Zap, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { UserAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
@@ -35,7 +35,7 @@ function Profile() {
   const fetchUserPolls = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       const { data: polls, error } = await supabase
         .from('polls')
         .select(`
@@ -89,7 +89,7 @@ function Profile() {
     const optionCount = poll.options?.length || 1;
     const maxPossibleVotes = totalVotes * optionCount;
     const actualVotes = poll.options?.reduce((sum, opt) => sum + (opt.votes_count || 0), 0) || 0;
-    
+
     return maxPossibleVotes > 0 ? (actualVotes / maxPossibleVotes) * 100 : 0;
   };
 
@@ -97,16 +97,16 @@ function Profile() {
     const totalPolls = polls.length;
     const totalVotes = polls.reduce((sum, poll) => sum + poll.total_votes, 0);
     const totalParticipants = polls.reduce((sum, poll) => sum + poll.unique_participants, 0);
-    
+
     const activePolls = polls.filter(poll => {
       if (!poll.expires_at) return true;
       return new Date(poll.expires_at) > new Date();
     }).length;
 
     const protectedPolls = polls.filter(poll => poll.is_password_protected).length;
-    
-    const avgEngagement = polls.length > 0 
-      ? polls.reduce((sum, poll) => sum + poll.engagement_rate, 0) / polls.length 
+
+    const avgEngagement = polls.length > 0
+      ? polls.reduce((sum, poll) => sum + poll.engagement_rate, 0) / polls.length
       : 0;
 
     const recentPolls = polls
@@ -194,8 +194,19 @@ function Profile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-white text-xl">Loading your analytics...</div>
+      <div className="min-h-screen relative overflow-hidden flex flex-col items-center justify-center bg-[#0B101E]">
+        {/* Background Gradients to match app aesthetic */}
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-600/20 blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-purple-600/20 blur-[120px] pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col items-center">
+          <div className="relative">
+            <div className="absolute inset-0 rounded-full blur-xl bg-blue-500/30 animate-pulse"></div>
+            <Loader2 className="w-12 h-12 text-blue-400 animate-spin relative z-10" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mt-6 tracking-tight">Loading Profile</h2>
+          <p className="text-gray-400 mt-2 text-center max-w-sm">Fetching your poll analytics and engagement metrics...</p>
+        </div>
       </div>
     );
   }
@@ -265,7 +276,7 @@ function Profile() {
                   <div className="text-sm text-gray-300">Engagement</div>
                 </div>
               </div>
-              
+
               {/* Secondary Metrics */}
               <div className="grid grid-cols-3 gap-4 mt-4">
                 <div className="text-center p-3 bg-gray-800 rounded-lg border border-gray-700">
@@ -308,7 +319,7 @@ function Profile() {
                 const totalVotes = getTotalVotesForPoll(poll);
                 const status = getPollStatus(poll);
                 const isExpired = status === 'expired';
-                
+
                 return (
                   <Card key={poll.id} className="bg-gray-900/90 border-gray-700 hover:border-gray-600 transition-colors">
                     <CardContent className="p-6">
@@ -348,10 +359,10 @@ function Profile() {
                           </Badge>
                         </div>
                       </div>
-                      
+
                       <div className="flex gap-2 mb-4">
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           onClick={() => navigate(`/polls/${poll.id}`)}
                           className="bg-blue-600 hover:bg-blue-700 text-white"
                           disabled={isExpired}
@@ -359,8 +370,8 @@ function Profile() {
                           <Eye className="w-4 h-4 mr-2" />
                           {isExpired ? 'View Results' : 'Live Poll'}
                         </Button>
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="outline"
                           onClick={() => copyPollLink(poll.id)}
                           className="border-gray-600 hover:bg-gray-800 text-white"
@@ -391,7 +402,7 @@ function Profile() {
                         <div className="space-y-2">
                           {poll.options.slice(0, 4).map((option) => {
                             const percentage = totalVotes > 0 ? ((option.votes_count || 0) / totalVotes) * 100 : 0;
-                            
+
                             return (
                               <div key={option.id} className="flex items-center gap-3">
                                 <div className="w-32 text-sm text-white truncate">
@@ -410,14 +421,14 @@ function Profile() {
                   </Card>
                 );
               })}
-              
+
               {userPolls.length === 0 && (
                 <Card className="bg-gray-900/90 border-gray-700">
                   <CardContent className="p-8 text-center">
                     <BarChart3 className="w-16 h-16 mx-auto mb-4 text-gray-400" />
                     <h3 className="text-lg font-semibold text-white mb-2">No polls created yet</h3>
                     <p className="text-gray-300 mb-4">Start creating interactive polls to see analytics here</p>
-                    <Button 
+                    <Button
                       onClick={() => navigate('/create-poll')}
                       className="bg-blue-600 hover:bg-blue-700 text-white"
                     >
@@ -448,12 +459,11 @@ function Profile() {
                       .map((poll, index) => (
                         <div key={poll.id} className="flex items-center justify-between p-4 bg-gray-800 rounded-lg border border-gray-700">
                           <div className="flex items-center gap-4">
-                            <div className={`w-10 h-10 flex items-center justify-center rounded-full ${
-                              index === 0 ? 'bg-yellow-500/20 text-yellow-300' :
-                              index === 1 ? 'bg-gray-500/20 text-gray-300' :
-                              index === 2 ? 'bg-orange-500/20 text-orange-300' :
-                              'bg-blue-500/20 text-blue-300'
-                            }`}>
+                            <div className={`w-10 h-10 flex items-center justify-center rounded-full ${index === 0 ? 'bg-yellow-500/20 text-yellow-300' :
+                                index === 1 ? 'bg-gray-500/20 text-gray-300' :
+                                  index === 2 ? 'bg-orange-500/20 text-orange-300' :
+                                    'bg-blue-500/20 text-blue-300'
+                              }`}>
                               <span className="font-bold">{index + 1}</span>
                             </div>
                             <div>
@@ -486,7 +496,7 @@ function Profile() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex gap-4">
-                    <Button 
+                    <Button
                       onClick={() => handleExportData('csv')}
                       className="bg-green-600 hover:bg-green-700 text-white"
                     >

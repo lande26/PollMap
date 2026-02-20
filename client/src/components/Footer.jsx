@@ -1,5 +1,7 @@
 import React from 'react';
-import { Github, Twitter, Linkedin, Heart } from 'lucide-react';
+import { Github, Heart } from 'lucide-react';
+import TwitterXIcon from './ui/icons/TwitterXIcon';
+import LinkedinIcon from './ui/icons/LinkedinIcon';
 
 const Footer = () => {
     return (
@@ -17,11 +19,11 @@ const Footer = () => {
                         <a href="https://github.com/lande26" target="_blank" rel="noreferrer" className="text-gray-500 hover:text-white transition-colors duration-200">
                             <Github size={18} />
                         </a>
-                        <a href="#" className="text-gray-500 hover:text-[#1DA1F2] transition-colors duration-200">
-                            <Twitter size={18} />
+                        <a href="https://x.com/KartikLande15" className="text-gray-500 hover:text-[#1DA1F2] transition-colors duration-200">
+                            <TwitterXIcon size={18} />
                         </a>
-                        <a href="#" className="text-gray-500 hover:text-[#0A66C2] transition-colors duration-200">
-                            <Linkedin size={18} />
+                        <a href="https://www.linkedin.com/in/kartik-lande" className="text-gray-500 hover:text-[#0A66C2] transition-colors duration-200">
+                            <LinkedinIcon size={18} />
                         </a>
                     </div>
 
