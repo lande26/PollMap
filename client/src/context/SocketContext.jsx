@@ -53,7 +53,7 @@ export const SocketContextProvider = ({ children }) => {
             newSocket.close();
             socketRef.current = null;
         };
-    }, [session]);
+    }, [session?.access_token]);
 
     return (
         <SocketContext.Provider value={{ socket, onlineUsers }}>
