@@ -362,7 +362,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 max-w-6xl mx-auto">
           <SpotlightCard className="p-6" spotlightColor="rgba(34, 197, 94, 0.15)">
             <div className="flex items-center gap-3 mb-3">
               <div className="bg-green-500/20 p-3 rounded-lg">
@@ -401,7 +401,7 @@ const Dashboard = () => {
           </SpotlightCard>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10 mb-16 max-w-6xl mx-auto">
           <FeatureCard
             icon={<PlusCircle size={24} className="text-blue-300" />}
             title="Create Polls"
@@ -428,7 +428,7 @@ const Dashboard = () => {
         </div>
 
         {/* Polls Section with SpotlightCard */}
-        <SpotlightCard className="p-8" spotlightColor="rgba(59, 130, 246, 0.15)">
+        <SpotlightCard className="p-8 max-w-6xl mx-auto" spotlightColor="rgba(59, 130, 246, 0.15)">
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center gap-3">
               <div className="bg-blue-500/20 p-2 rounded-lg">
