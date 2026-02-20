@@ -534,7 +534,7 @@ const Dashboard = () => {
               {/* Poll Display */}
               <SpotlightCard className="p-6" spotlightColor="rgba(59, 130, 246, 0.1)">
                 {selectedPollId ? (
-                  <Polls pollId={selectedPollId} />
+                  <Polls pollId={selectedPollId} isDashboardView={true} />
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full text-center py-16">
                     <div className="mb-6 bg-blue-500/10 p-6 rounded-full">

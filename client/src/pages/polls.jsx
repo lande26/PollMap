@@ -66,7 +66,7 @@ const trackPageView = (path) => {
   }
 };
 
-const Polls = ({ pollId }) => {
+const Polls = ({ pollId, isDashboardView = false }) => {
   const [polls, setPolls] = useState([]);
   const [poll, setPoll] = useState(null);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -815,23 +815,25 @@ const Polls = ({ pollId }) => {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                    <Button
-                      onClick={() => navigate(`/polls/${pollId}/analytics`)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                    >
-                      <Activity className="mr-2 h-4 w-4" />
-                      Advanced Analytics
-                    </Button>
-                    <Button
-                      onClick={() => openShareModal(poll)}
-                      variant="outline"
-                      className="border-gray-600 bg-[#0D1425] hover:bg-[#1a2332] text-white"
-                    >
-                      <Share2 className="mr-2 h-4 w-4" />
-                      Share Results
-                    </Button>
-                  </div>
+                  {!isDashboardView && (
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <Button
+                        onClick={() => navigate(`/polls/${pollId}/analytics`)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        <Activity className="mr-2 h-4 w-4" />
+                        Advanced Analytics
+                      </Button>
+                      <Button
+                        onClick={() => openShareModal(poll)}
+                        variant="outline"
+                        className="border-gray-600 bg-[#0D1425] hover:bg-[#1a2332] text-white"
+                      >
+                        <Share2 className="mr-2 h-4 w-4" />
+                        Share Results
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
