@@ -10,6 +10,7 @@ import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Progress } from '../components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
+import PageShell, { GlassSection } from '../components/ui/PageShell.jsx';
 
 function Profile() {
   const [user, setUser] = useState(null);
@@ -194,119 +195,127 @@ function Profile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen relative overflow-hidden flex flex-col items-center justify-center bg-[#0B101E]">
-        {/* Background Gradients to match app aesthetic */}
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-600/20 blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-purple-600/20 blur-[120px] pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col items-center">
-          <div className="relative">
-            <div className="absolute inset-0 rounded-full blur-xl bg-blue-500/30 animate-pulse"></div>
-            <Loader2 className="w-12 h-12 text-blue-400 animate-spin relative z-10" />
+      <PageShell
+        width="max-w-4xl"
+        badge={<><User className="h-4 w-4" /><span>Profile & Analytics</span></>}
+        title="Loading profile"
+        description="Fetching your creator activity and analytics."
+      >
+        <GlassSection className="flex min-h-[320px] items-center justify-center">
+          <div className="flex flex-col items-center">
+            <Loader2 className="h-12 w-12 animate-spin text-orange-200" />
+            <h2 className="mt-6 font-display text-2xl font-semibold tracking-tight text-white">Loading profile</h2>
+            <p className="mt-2 max-w-sm text-center text-sm text-slate-400">Fetching your poll analytics and engagement metrics.</p>
           </div>
-          <h2 className="text-2xl font-bold text-white mt-6 tracking-tight">Loading Profile</h2>
-          <p className="text-gray-400 mt-2 text-center max-w-sm">Fetching your poll analytics and engagement metrics...</p>
-        </div>
-      </div>
+        </GlassSection>
+      </PageShell>
     );
   }
 
   return (
-    <div className="min-h-screen text-white">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <PageShell
+      width="max-w-7xl"
+      badge={<><User className="h-4 w-4" /><span>Profile & Analytics</span></>}
+      title="Your PollMap profile"
+      description="Track creator performance, export poll analytics, and keep your account area aligned with the rest of the platform."
+    >
         {/* Header Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Profile Card */}
-          <Card className="bg-gray-900/90 border-gray-700 lg:col-span-1">
-            <CardHeader className="text-center">
-              <div className="flex justify-center mb-4">
-                <Avatar className="w-24 h-24 border-4 border-blue-500">
+          <GlassSection className="lg:col-span-1 p-1">
+          <Card className="border-0 bg-transparent shadow-none">
+            <CardHeader className="pb-6 text-center">
+              <div className="mb-4 flex justify-center">
+                <Avatar className="w-24 h-24 border-4 border-orange-400/70">
                   <AvatarImage src={user?.user_metadata?.avatar_url} />
-                  <AvatarFallback className="text-2xl bg-gradient-to-br from-blue-600 to-purple-600">
+                  <AvatarFallback className="bg-gradient-to-br from-orange-500 to-sky-500 text-2xl text-slate-950">
                     {getInitials(user?.email)}
                   </AvatarFallback>
                 </Avatar>
               </div>
-              <CardTitle className="text-xl text-white">
+              <CardTitle className="font-display text-2xl text-white">
                 {user?.user_metadata?.display_name || 'Poll Creator'}
               </CardTitle>
-              <CardDescription className="text-gray-300">
+              <CardDescription className="text-slate-300">
                 {user?.email}
               </CardDescription>
-              <div className="mt-4 p-3 bg-gray-800 rounded-lg">
-                <div className="text-sm text-gray-300">Member since</div>
+              <div className="mt-5 rounded-2xl border border-white/8 bg-white/[0.04] p-4">
+                <div className="text-xs uppercase tracking-[0.22em] text-slate-500">Member since</div>
                 <div className="text-white font-semibold">
                   {new Date(user?.created_at).toLocaleDateString()}
                 </div>
               </div>
             </CardHeader>
           </Card>
+          </GlassSection>
 
           {/* Analytics Overview */}
-          <Card className="bg-gray-900/90 border-gray-700 lg:col-span-2">
+          <GlassSection className="lg:col-span-2 p-1">
+          <Card className="border-0 bg-transparent shadow-none">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-white">
-                <BarChart3 className="w-6 h-6 text-blue-400" />
+                <BarChart3 className="w-6 h-6 text-orange-200" />
                 Poll Analytics Dashboard
               </CardTitle>
-              <CardDescription className="text-gray-300">
+              <CardDescription className="text-slate-300">
                 Real-time insights from your polling activity
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center p-4 bg-gray-800 rounded-lg border border-gray-700">
-                  <PieChart className="w-8 h-8 mx-auto mb-2 text-blue-400" />
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                <div className="rounded-2xl border border-white/8 bg-white/[0.04] p-4 text-center">
+                  <PieChart className="w-8 h-8 mx-auto mb-2 text-orange-200" />
                   <div className="text-2xl font-bold text-white">{analytics?.totalPolls || 0}</div>
-                  <div className="text-sm text-gray-300">Total Polls</div>
+                  <div className="text-sm text-slate-300">Total Polls</div>
                 </div>
-                <div className="text-center p-4 bg-gray-800 rounded-lg border border-gray-700">
+                <div className="rounded-2xl border border-white/8 bg-white/[0.04] p-4 text-center">
                   <Vote className="w-8 h-8 mx-auto mb-2 text-green-400" />
                   <div className="text-2xl font-bold text-white">{analytics?.totalVotes || 0}</div>
-                  <div className="text-sm text-gray-300">Total Votes</div>
+                  <div className="text-sm text-slate-300">Total Votes</div>
                 </div>
-                <div className="text-center p-4 bg-gray-800 rounded-lg border border-gray-700">
+                <div className="rounded-2xl border border-white/8 bg-white/[0.04] p-4 text-center">
                   <Users className="w-8 h-8 mx-auto mb-2 text-purple-400" />
                   <div className="text-2xl font-bold text-white">{analytics?.totalParticipants || 0}</div>
-                  <div className="text-sm text-gray-300">Participants</div>
+                  <div className="text-sm text-slate-300">Participants</div>
                 </div>
-                <div className="text-center p-4 bg-gray-800 rounded-lg border border-gray-700">
+                <div className="rounded-2xl border border-white/8 bg-white/[0.04] p-4 text-center">
                   <Zap className="w-8 h-8 mx-auto mb-2 text-yellow-400" />
                   <div className="text-2xl font-bold text-white">{analytics?.avgEngagement || 0}%</div>
-                  <div className="text-sm text-gray-300">Engagement</div>
+                  <div className="text-sm text-slate-300">Engagement</div>
                 </div>
               </div>
 
               {/* Secondary Metrics */}
-              <div className="grid grid-cols-3 gap-4 mt-4">
-                <div className="text-center p-3 bg-gray-800 rounded-lg border border-gray-700">
+              <div className="mt-4 grid grid-cols-3 gap-4">
+                <div className="rounded-2xl border border-white/8 bg-white/[0.04] p-3 text-center">
                   <Clock className="w-6 h-6 mx-auto mb-1 text-green-400" />
                   <div className="text-lg font-bold text-white">{analytics?.activePolls || 0}</div>
-                  <div className="text-xs text-gray-300">Active</div>
+                  <div className="text-xs text-slate-300">Active</div>
                 </div>
-                <div className="text-center p-3 bg-gray-800 rounded-lg border border-gray-700">
+                <div className="rounded-2xl border border-white/8 bg-white/[0.04] p-3 text-center">
                   <Shield className="w-6 h-6 mx-auto mb-1 text-yellow-400" />
                   <div className="text-lg font-bold text-white">{analytics?.protectedPolls || 0}</div>
-                  <div className="text-xs text-gray-300">Protected</div>
+                  <div className="text-xs text-slate-300">Protected</div>
                 </div>
-                <div className="text-center p-3 bg-gray-800 rounded-lg border border-gray-700">
-                  <Calendar className="w-6 h-6 mx-auto mb-1 text-blue-400" />
+                <div className="rounded-2xl border border-white/8 bg-white/[0.04] p-3 text-center">
+                  <Calendar className="w-6 h-6 mx-auto mb-1 text-sky-300" />
                   <div className="text-lg font-bold text-white">{analytics?.recentPolls || 0}</div>
-                  <div className="text-xs text-gray-300">This Week</div>
+                  <div className="text-xs text-slate-300">This Week</div>
                 </div>
               </div>
             </CardContent>
           </Card>
+          </GlassSection>
         </div>
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="polls" className="space-y-8">
-          <TabsList className="bg-gray-900 border border-gray-700 p-1">
-            <TabsTrigger value="polls" className="text-white data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+          <TabsList className="border border-white/10 bg-[#0c1324]/80 p-1 backdrop-blur-md">
+            <TabsTrigger value="polls" className="text-white data-[state=active]:bg-orange-500 data-[state=active]:text-slate-950">
               <BarChart3 className="w-4 h-4 mr-2" />
               My Polls
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="text-white data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="analytics" className="text-white data-[state=active]:bg-orange-500 data-[state=active]:text-slate-950">
               <TrendingUp className="w-4 h-4 mr-2" />
               Performance
             </TabsTrigger>
@@ -321,7 +330,7 @@ function Profile() {
                 const isExpired = status === 'expired';
 
                 return (
-                  <Card key={poll.id} className="bg-gray-900/90 border-gray-700 hover:border-gray-600 transition-colors">
+                <Card key={poll.id} className="border-white/10 bg-[#0c1324]/80 backdrop-blur-xl transition-colors hover:border-orange-400/30">
                     <CardContent className="p-6">
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex-1">
@@ -364,7 +373,7 @@ function Profile() {
                         <Button
                           size="sm"
                           onClick={() => navigate(`/polls/${poll.id}`)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                          className="bg-gradient-to-r from-orange-500 to-amber-400 text-slate-950 hover:from-orange-400 hover:to-amber-300"
                           disabled={isExpired}
                         >
                           <Eye className="w-4 h-4 mr-2" />
@@ -374,7 +383,7 @@ function Profile() {
                           size="sm"
                           variant="outline"
                           onClick={() => copyPollLink(poll.id)}
-                          className="border-gray-600 hover:bg-gray-800 text-white"
+                          className="border-white/10 bg-white/[0.03] text-white hover:bg-white/[0.08]"
                         >
                           <Copy className="w-4 h-4 mr-2" />
                           Copy Link
@@ -383,17 +392,17 @@ function Profile() {
 
                       {/* Engagement Metrics */}
                       <div className="grid grid-cols-3 gap-4 mb-4 text-center">
-                        <div className="p-2 bg-gray-800 rounded">
+                        <div className="rounded-xl border border-white/8 bg-white/[0.04] p-2">
                           <div className="text-white font-semibold">{totalVotes}</div>
-                          <div className="text-xs text-gray-300">Total Votes</div>
+                          <div className="text-xs text-slate-300">Total Votes</div>
                         </div>
-                        <div className="p-2 bg-gray-800 rounded">
+                        <div className="rounded-xl border border-white/8 bg-white/[0.04] p-2">
                           <div className="text-white font-semibold">{poll.unique_participants}</div>
-                          <div className="text-xs text-gray-300">Participants</div>
+                          <div className="text-xs text-slate-300">Participants</div>
                         </div>
-                        <div className="p-2 bg-gray-800 rounded">
+                        <div className="rounded-xl border border-white/8 bg-white/[0.04] p-2">
                           <div className="text-white font-semibold">{Math.round(poll.engagement_rate)}%</div>
-                          <div className="text-xs text-gray-300">Engagement</div>
+                          <div className="text-xs text-slate-300">Engagement</div>
                         </div>
                       </div>
 
@@ -429,8 +438,8 @@ function Profile() {
                     <h3 className="text-lg font-semibold text-white mb-2">No polls created yet</h3>
                     <p className="text-gray-300 mb-4">Start creating interactive polls to see analytics here</p>
                     <Button
-                      onClick={() => navigate('/create-poll')}
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                      onClick={() => navigate('/create-poll', { state: { from: '/profile' } })}
+                      className="bg-gradient-to-r from-orange-500 to-amber-400 text-slate-950 hover:from-orange-400 hover:to-amber-300"
                     >
                       Create Your First Poll
                     </Button>
@@ -444,7 +453,7 @@ function Profile() {
           <TabsContent value="analytics">
             <div className="grid gap-6">
               {/* Top Performing Polls */}
-              <Card className="bg-gray-900/90 border-gray-700">
+              <Card className="border-white/10 bg-[#0c1324]/80 backdrop-blur-xl">
                 <CardHeader>
                   <CardTitle className="text-white">Top Performing Polls</CardTitle>
                   <CardDescription className="text-gray-300">
@@ -487,7 +496,7 @@ function Profile() {
               </Card>
 
               {/* Export Section */}
-              <Card className="bg-gray-900/90 border-gray-700">
+              <Card className="border-white/10 bg-[#0c1324]/80 backdrop-blur-xl">
                 <CardHeader>
                   <CardTitle className="text-white">Export Analytics</CardTitle>
                   <CardDescription className="text-gray-300">
@@ -512,8 +521,7 @@ function Profile() {
             </div>
           </TabsContent>
         </Tabs>
-      </div>
-    </div>
+    </PageShell>
   );
 }
 

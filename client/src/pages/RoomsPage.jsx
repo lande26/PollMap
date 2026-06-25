@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import PageShell, { GlassSection } from '../components/ui/PageShell.jsx';
 
 const RoomsPage = () => {
     const navigate = useNavigate();
@@ -139,32 +140,22 @@ const RoomsPage = () => {
     };
 
     return (
-        <div className="min-h-screen relative py-8 px-4">
-            <div className="absolute inset-0 bg-gradient-to-b via-transparent pointer-events-none" />
-
-            <div className="relative z-10 container mx-auto max-w-5xl">
-                {/* Header */}
-                <div className="text-center mb-10">
-                    <div className="inline-flex items-center gap-2 mb-3 px-4 py-2 rounded-full bg-indigo-500/15 border border-indigo-400/30 backdrop-blur-md">
-                        <Zap className="w-4 h-4 text-indigo-300" />
-                        <span className="text-sm text-indigo-200 font-medium">Live Sessions</span>
-                    </div>
-                    <h1 className="text-4xl font-bold text-white mb-2" style={{ fontFamily: 'Lato, sans-serif' }}>
-                        Rooms
-                    </h1>
-                    <p className="text-gray-400 text-base max-w-lg mx-auto">
-                        Create or join live rooms to run polls and Q&A sessions in real-time.
-                    </p>
-                </div>
+        <PageShell
+            width="max-w-5xl"
+            badge={<><Zap className="h-4 w-4 text-orange-200" /><span>Live Sessions</span></>}
+            title="Rooms"
+            description="Create or join moderated live rooms for polls and Q&A without leaving the shared PollMap shell."
+        >
 
                 {/* Create + Join Section */}
-                <div className="grid md:grid-cols-2 gap-6 mb-10">
+                <div className="mb-10 grid gap-5 md:grid-cols-2">
                     {/* Create Room Card */}
-                    <Card className="bg-[#0f1729]/60 backdrop-blur-xl border-indigo-500/20 shadow-2xl shadow-indigo-900/20">
-                        <CardHeader className="pb-4">
+                    <GlassSection className="p-1">
+                    <Card className="border-orange-400/15 bg-[#0f1729]/60 shadow-none backdrop-blur-xl">
+                        <CardHeader className="pb-3">
                             <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-lg bg-indigo-500/25 flex items-center justify-center">
-                                    <Plus className="w-4 h-4 text-indigo-300" />
+                                <div className="w-8 h-8 rounded-lg bg-orange-500/18 flex items-center justify-center">
+                                    <Plus className="w-4 h-4 text-orange-200" />
                                 </div>
                                 Create a Room
                             </CardTitle>
@@ -175,12 +166,12 @@ const RoomsPage = () => {
                         <CardContent>
                             <Dialog open={createOpen} onOpenChange={setCreateOpen}>
                                 <DialogTrigger asChild>
-                                    <Button className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-500/30 h-11">
+                                    <Button className="h-11 w-full bg-gradient-to-r from-orange-500 to-amber-400 text-slate-950 shadow-lg shadow-orange-500/20 hover:from-orange-400 hover:to-amber-300">
                                         <Sparkles className="mr-2 h-4 w-4" />
                                         Create New Room
                                     </Button>
                                 </DialogTrigger>
-                                <DialogContent className="bg-[#0f1729] border-indigo-500/30 text-white">
+                                <DialogContent className="border-orange-400/15 bg-[#0f1729] text-white">
                                     <DialogHeader>
                                         <DialogTitle className="text-white">Create a Room</DialogTitle>
                                         <DialogDescription className="text-gray-400">
@@ -196,7 +187,7 @@ const RoomsPage = () => {
                                                 value={createName}
                                                 onChange={(e) => setCreateName(e.target.value)}
                                                 onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
-                                                className="bg-[#0a0f1c]/40 border-indigo-400/20 text-white placeholder:text-gray-500 focus:border-indigo-400/50"
+                                                className="border-orange-400/15 bg-[#0a0f1c]/40 text-white placeholder:text-gray-500 focus:border-orange-400/40 focus:ring-orange-400/15"
                                             />
                                         </div>
                                     </div>
@@ -209,7 +200,7 @@ const RoomsPage = () => {
                                         <Button
                                             onClick={handleCreate}
                                             disabled={createLoading || !createName.trim()}
-                                            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white"
+                                            className="bg-gradient-to-r from-orange-500 to-amber-400 text-slate-950 hover:from-orange-400 hover:to-amber-300"
                                         >
                                             {createLoading ? 'Creating...' : 'Create Room'}
                                         </Button>
@@ -218,13 +209,15 @@ const RoomsPage = () => {
                             </Dialog>
                         </CardContent>
                     </Card>
+                    </GlassSection>
 
                     {/* Join Room Card */}
-                    <Card className="bg-[#0f1729]/60 backdrop-blur-xl border-emerald-500/20 shadow-2xl shadow-emerald-900/20">
-                        <CardHeader className="pb-4">
+                    <GlassSection className="p-1">
+                    <Card className="border-sky-400/15 bg-[#0f1729]/60 shadow-none backdrop-blur-xl">
+                        <CardHeader className="pb-3">
                             <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-lg bg-emerald-500/25 flex items-center justify-center">
-                                    <LogIn className="w-4 h-4 text-emerald-300" />
+                                <div className="w-8 h-8 rounded-lg bg-sky-500/16 flex items-center justify-center">
+                                    <LogIn className="w-4 h-4 text-sky-200" />
                                 </div>
                                 Join a Room
                             </CardTitle>
@@ -240,31 +233,32 @@ const RoomsPage = () => {
                                     onChange={(e) => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
                                     onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
                                     maxLength={6}
-                                    className="bg-[#0a0f1c]/40 border-emerald-400/20 text-white placeholder:text-gray-500 focus:border-emerald-400/50 font-mono text-lg tracking-widest text-center uppercase h-11"
+                                    className="h-11 border-sky-400/15 bg-[#0a0f1c]/40 text-center font-mono text-lg uppercase tracking-widest text-white placeholder:text-gray-500 focus:border-sky-400/40 focus:ring-sky-400/15"
                                 />
                                 <Button
                                     onClick={handleJoin}
                                     disabled={joinLoading || joinCode.length !== 6}
-                                    className="bg-emerald-600 hover:bg-emerald-700 text-white h-11 px-6"
+                                    className="h-11 bg-white/8 px-6 text-white hover:bg-white/12"
                                 >
                                     {joinLoading ? '...' : <ArrowRight className="h-5 w-5" />}
                                 </Button>
                             </div>
                         </CardContent>
                     </Card>
+                    </GlassSection>
                 </div>
 
-                <Separator className="bg-white/10 mb-8" />
+                <Separator className="mb-8 bg-white/10" />
 
                 {/* Your Rooms */}
                 <div>
-                    <h2 className="text-xl font-semibold text-white mb-5 flex items-center gap-2">
-                        <DoorOpen className="h-5 w-5 text-indigo-400" />
+                    <h2 className="mb-5 flex items-center gap-2 font-display text-2xl font-semibold text-white">
+                        <DoorOpen className="h-5 w-5 text-orange-200" />
                         Your Rooms
                     </h2>
 
                     {loading ? (
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                             {[1, 2, 3].map(i => (
                                 <Card key={i} className="bg-[#0f1729]/40 border-white/10">
                                     <CardContent className="pt-6 space-y-3">
@@ -276,24 +270,24 @@ const RoomsPage = () => {
                             ))}
                         </div>
                     ) : rooms.length === 0 ? (
-                        <Card className="bg-[#0f1729]/30 border-white/10 border-dashed">
+                        <GlassSection className="border-dashed">
                             <CardContent className="flex flex-col items-center justify-center py-12">
-                                <div className="w-16 h-16 rounded-2xl bg-indigo-500/15 flex items-center justify-center mb-4">
-                                    <DoorOpen className="w-8 h-8 text-indigo-400/60" />
+                                <div className="w-16 h-16 rounded-2xl bg-orange-500/12 flex items-center justify-center mb-4">
+                                    <DoorOpen className="w-8 h-8 text-orange-200/70" />
                                 </div>
                                 <p className="text-gray-400 text-sm mb-4">No rooms yet. Create one to get started!</p>
                                 <Button
                                     variant="outline"
-                                    className="border-indigo-400/30 text-indigo-300 hover:bg-indigo-500/15"
+                                    className="border-orange-400/25 text-orange-200 hover:bg-orange-500/10"
                                     onClick={() => setCreateOpen(true)}
                                 >
                                     <Plus className="mr-2 h-4 w-4" />
                                     Create your first room
                                 </Button>
                             </CardContent>
-                        </Card>
+                        </GlassSection>
                     ) : (
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                             <AnimatePresence>
                                 {rooms.map((room, index) => (
                                     <motion.div
@@ -303,13 +297,13 @@ const RoomsPage = () => {
                                         transition={{ delay: index * 0.05 }}
                                     >
                                         <Card
-                                            className={`bg-[#0f1729]/50 backdrop-blur-sm border-white/10 hover:border-indigo-400/30 transition-all cursor-pointer group ${!room.is_active ? 'opacity-60' : ''
+                                            className={`bg-[#0f1729]/50 backdrop-blur-sm border-white/10 hover:border-orange-400/25 transition-all cursor-pointer group ${!room.is_active ? 'opacity-60' : ''
                                                 }`}
                                             onClick={() => navigate(`/rooms/${room.code}`)}
                                         >
-                                            <CardHeader className="pb-3">
+                                            <CardHeader className="pb-2">
                                                 <div className="flex items-center justify-between">
-                                                    <CardTitle className="text-white text-base font-semibold group-hover:text-indigo-300 transition-colors">
+                                                    <CardTitle className="font-display text-lg font-semibold text-white transition-colors group-hover:text-orange-200">
                                                         {room.name}
                                                     </CardTitle>
                                                     <Badge
@@ -323,14 +317,14 @@ const RoomsPage = () => {
                                                     </Badge>
                                                 </div>
                                             </CardHeader>
-                                            <CardContent className="pt-0 space-y-3">
+                                            <CardContent className="space-y-3 pt-0">
                                                 <div className="flex items-center justify-between text-sm">
                                                     <TooltipProvider>
                                                         <UITooltip>
                                                             <TooltipTrigger asChild>
                                                                 <button
                                                                     onClick={(e) => { e.stopPropagation(); copyCode(room.code); }}
-                                                                    className="flex items-center gap-1.5 text-gray-400 hover:text-indigo-300 transition font-mono text-xs bg-white/5 px-2 py-1 rounded"
+                                                                    className="flex items-center gap-1.5 rounded-lg bg-white/5 px-2 py-1 font-mono text-xs text-gray-400 transition hover:text-orange-200"
                                                                 >
                                                                     {copiedCode === room.code ? <CheckCheck className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                                                                     {room.code}
@@ -353,7 +347,7 @@ const RoomsPage = () => {
                                                             Host
                                                         </Badge>
                                                     )}
-                                                    <span className="text-gray-500 text-xs flex items-center gap-1 ml-auto">
+                                                    <span className="ml-auto flex items-center gap-1 text-xs text-gray-500">
                                                         <Clock className="h-3 w-3" />
                                                         {formatDate(room.created_at)}
                                                     </span>
@@ -366,8 +360,7 @@ const RoomsPage = () => {
                         </div>
                     )}
                 </div>
-            </div>
-        </div>
+        </PageShell>
     );
 };
 

@@ -31,26 +31,26 @@ export const AuthProvider = ({ children }) => {
 
       if (error) {
         console.error("Sign-in error:", error.message);
-        return { success: false, error: error.message };
+        return { success: false, error: error.message, data: null };
       }
 
-      console.log("Sign-in success:", data);
-      return { success: true, data };
+      return { success: true, data, error: null };
     } catch (error) {
       console.error("Unexpected error during sign-in:", error.message);
       return {
         success: false,
         error: "An unexpected error occurred. Please try again.",
+        data: null,
       };
     }
   };
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (redirectTo = `${window.location.origin}/dashboard`) => {
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo,
         },
       });
 

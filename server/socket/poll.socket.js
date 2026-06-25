@@ -123,25 +123,40 @@ export const handlePollSocket = (io) => {
 
         if (error) throw error;
 
-        // Process polls data
-        const processedPolls = await Promise.all(
-          polls.map(async (poll) => {
-            const { count: participantCount } = await supabase
-              .from('votes')
-              .select('user_id', { count: 'exact', head: true })
-              .eq('poll_id', poll.id);
+        const pollIds = polls.map((poll) => poll.id);
+        let votesData = [];
 
-            const totalVotes = poll.options.reduce((sum, option) => sum + option.votes_count, 0);
-            const engagementRate = participantCount > 0 ? Math.round((totalVotes / participantCount) * 100) : 0;
+        if (pollIds.length > 0) {
+          const { data: voteRows, error: votesError } = await supabase
+            .from('votes')
+            .select('poll_id, user_id')
+            .in('poll_id', pollIds);
 
-            return {
-              ...poll,
-              totalVotes,
-              participantCount: participantCount || 0,
-              engagementRate
-            };
-          })
-        );
+          if (votesError) throw votesError;
+          votesData = voteRows || [];
+        }
+
+        const participantsByPoll = votesData.reduce((acc, vote) => {
+          if (!acc[vote.poll_id]) {
+            acc[vote.poll_id] = new Set();
+          }
+
+          acc[vote.poll_id].add(vote.user_id || `anon:${vote.poll_id}`);
+          return acc;
+        }, {});
+
+        const processedPolls = polls.map((poll) => {
+          const totalVotes = poll.options.reduce((sum, option) => sum + option.votes_count, 0);
+          const participantCount = participantsByPoll[poll.id]?.size || 0;
+          const engagementRate = participantCount > 0 ? Math.round((totalVotes / participantCount) * 100) : 0;
+
+          return {
+            ...poll,
+            totalVotes,
+            participantCount,
+            engagementRate
+          };
+        });
 
         const result = {
           polls: processedPolls,
@@ -180,21 +195,23 @@ export const handlePollSocket = (io) => {
         return;
       }
 
+      if (!data.userId) {
+        socket.emit("pollError", { message: "Authentication required to vote" });
+        return;
+      }
+
       try {
-        // Check if user has already voted (only if userId is provided)
-        if (data.userId) {
-          const { data: existingVote, error: checkError } = await supabase
-            .from('votes')
-            .select('*')
-            .eq('poll_id', data.pollId)
-            .eq('user_id', data.userId);
+        const { data: existingVote, error: checkError } = await supabase
+          .from('votes')
+          .select('*')
+          .eq('poll_id', data.pollId)
+          .eq('user_id', data.userId);
 
-          if (checkError) throw checkError;
+        if (checkError) throw checkError;
 
-          if (existingVote && existingVote.length > 0) {
-            socket.emit("pollError", { message: "You have already voted in this poll" });
-            return;
-          }
+        if (existingVote && existingVote.length > 0) {
+          socket.emit("pollError", { message: "You have already voted in this poll" });
+          return;
         }
 
         // Record the vote in the database
@@ -203,7 +220,7 @@ export const handlePollSocket = (io) => {
           .insert([{
             poll_id: data.pollId,
             option_id: data.optionId,
-            user_id: data.userId || null
+            user_id: data.userId
           }]);
 
         if (voteError) throw voteError;

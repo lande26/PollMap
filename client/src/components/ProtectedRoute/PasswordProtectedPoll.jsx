@@ -246,6 +246,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Shield, AlertCircle, Lock, Loader2, Eye } from "lucide-react";
 import { toast } from 'sonner';
+import PageShell, { GlassSection } from '../ui/PageShell.jsx';
 
 const PasswordProtectedPoll = ({ pollId, onAuthenticated, onSkip }) => {
   const [password, setPassword] = useState('');
@@ -289,15 +290,21 @@ const PasswordProtectedPoll = ({ pollId, onAuthenticated, onSkip }) => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-6">
-      <Card className="w-full max-w-md bg-[#10172A]/90 backdrop-blur-md border border-gray-700 text-white shadow-2xl">
+    <PageShell
+      width="max-w-3xl"
+      badge={<><Shield className="h-4 w-4" /><span>Protected Poll</span></>}
+      title="Password required"
+      description="This poll is gated. Enter the access key to continue into the voting flow."
+    >
+      <GlassSection className="mx-auto max-w-md p-1">
+      <Card className="w-full border-white/10 bg-[#10172A]/90 text-white shadow-none">
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-center mb-4">
-            <div className="p-4 rounded-full bg-yellow-500/20 border border-yellow-500/30">
-              <Shield className="h-8 w-8 text-yellow-400" />
+            <div className="rounded-full border border-orange-400/20 bg-orange-500/10 p-4">
+              <Shield className="h-8 w-8 text-orange-300" />
             </div>
           </div>
-          <CardTitle className="text-2xl text-center">Password Protected</CardTitle>
+          <CardTitle className="font-display text-3xl text-center">Password Protected</CardTitle>
           <CardDescription className="text-center text-gray-300">
             This poll is password protected. Please enter the password to continue.
           </CardDescription>
@@ -314,7 +321,7 @@ const PasswordProtectedPoll = ({ pollId, onAuthenticated, onSkip }) => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="bg-[#0D1425] border-gray-600 text-white placeholder:text-gray-400 focus:border-blue-500/50"
+                className="border-white/10 bg-white/5 text-white placeholder:text-gray-400 focus:border-orange-400/50"
                 placeholder="Enter password"
                 required
               />
@@ -331,7 +338,7 @@ const PasswordProtectedPoll = ({ pollId, onAuthenticated, onSkip }) => {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
+                className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-400 hover:to-amber-400 disabled:bg-gray-600 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <>
@@ -348,7 +355,7 @@ const PasswordProtectedPoll = ({ pollId, onAuthenticated, onSkip }) => {
                   type="button"
                   variant="outline"
                   onClick={onSkip}
-                  className="w-full border-gray-600 bg-[#0D1425] hover:bg-[#1a2332] text-white"
+                  className="w-full border-white/10 bg-white/5 text-white hover:bg-white/10"
                 >
                   <Eye className="mr-2 h-4 w-4" />
                   View Without Password
@@ -358,7 +365,8 @@ const PasswordProtectedPoll = ({ pollId, onAuthenticated, onSkip }) => {
           </form>
         </CardContent>
       </Card>
-    </div>
+      </GlassSection>
+    </PageShell>
   );
 };
 

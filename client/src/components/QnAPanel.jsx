@@ -4,46 +4,51 @@ import { UserAuth } from '../context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import {
     MessageCircle, ThumbsUp, Send, CheckCircle2,
-    ChevronDown, ChevronUp, AlertCircle
+    ChevronDown, ChevronUp
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-const QnAPanel = ({ pollId, isPollCreator = false }) => {
+const QnAPanel = ({ roomId, roomCode, isHost = false }) => {
     const [questions, setQuestions] = useState([]);
     const [newQuestion, setNewQuestion] = useState('');
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [expanded, setExpanded] = useState(true);
-    const [sortBy, setSortBy] = useState('votes'); // 'votes' | 'newest'
+    const [sortBy, setSortBy] = useState('votes');
 
     const socketContext = useSocketContext();
     const socket = socketContext?.socket;
     const { user } = UserAuth();
 
-    // Fetch questions on mount
     useEffect(() => {
-        if (!socket || !pollId) return;
-        console.log('[QNA] QnAPanel mounted — pollId:', pollId);
-
-        socket.emit("qna:get", { pollId });
-
-        const handleQuestions = ({ questions: qs }) => {
-            console.log(`[QNA] Questions loaded: ${qs.length}`);
-            setQuestions(qs);
+        if (!socket || !roomId || !roomCode) {
             setLoading(false);
-        };
+            return;
+        }
+
+        let isMounted = true;
+
+        socket.emit('qna:get', { roomId, code: roomCode }, (response = {}) => {
+            if (!isMounted) return;
+
+            if (response.error) {
+                toast.error(response.error);
+                setLoading(false);
+                return;
+            }
+
+            setQuestions(response.questions || []);
+            setLoading(false);
+        });
 
         const handleNewQuestion = ({ question }) => {
-            console.log(`[QNA] New question received: ${question.id}`);
             setQuestions(prev => [question, ...prev]);
         };
 
         const handleVoteUpdated = ({ questionId, action, userId: voterId }) => {
-            console.log(`[QNA] Vote ${action} on question ${questionId}`);
             setQuestions(prev => prev.map(q => {
                 if (q.id !== questionId) return q;
                 const newVoteCount = action === 'added' ? q.vote_count + 1 : q.vote_count - 1;
@@ -53,70 +58,69 @@ const QnAPanel = ({ pollId, isPollCreator = false }) => {
         };
 
         const handleAnswered = ({ questionId }) => {
-            console.log(`[QNA] Question ${questionId} marked as answered`);
             setQuestions(prev => prev.map(q =>
                 q.id === questionId ? { ...q, is_answered: true } : q
             ));
         };
 
-        const handleError = ({ message }) => {
-            console.error(`Error:`, message);
-            toast.error(message);
-            setLoading(false);
-        };
-
-        socket.on("qna:questions", handleQuestions);
-        socket.on("qna:new-question", handleNewQuestion);
-        socket.on("qna:vote-updated", handleVoteUpdated);
-        socket.on("qna:question-answered", handleAnswered);
-        socket.on("qna:error", handleError);
-
         return () => {
-            console.log('[QNA] QnAPanel cleanup');
-            socket.off("qna:questions", handleQuestions);
-            socket.off("qna:new-question", handleNewQuestion);
-            socket.off("qna:vote-updated", handleVoteUpdated);
-            socket.off("qna:question-answered", handleAnswered);
-            socket.off("qna:error", handleError);
+            isMounted = false;
+            socket.off('qna:new-question', handleNewQuestion);
+            socket.off('qna:vote-updated', handleVoteUpdated);
+            socket.off('qna:question-answered', handleAnswered);
         };
-    }, [socket, pollId, user?.id]);
+    }, [socket, roomId, roomCode, user?.id]);
 
     const handleSubmit = useCallback((e) => {
         e.preventDefault();
-        if (!newQuestion.trim() || !socket || submitting) return;
+        if (!newQuestion.trim() || !socket || !roomId || !roomCode || submitting) return;
 
         if (!user) {
             toast.error('Please sign in to ask a question');
             return;
         }
 
-        console.log(`[QNA] Submitting question for poll ${pollId}`);
         setSubmitting(true);
-        socket.emit("qna:ask", { pollId, content: newQuestion.trim() });
-        setNewQuestion('');
+        socket.emit(
+            'qna:ask',
+            { roomId, code: roomCode, content: newQuestion.trim() },
+            (response = {}) => {
+                setSubmitting(false);
 
-        // Reset submitting state after a short delay
-        setTimeout(() => setSubmitting(false), 500);
-    }, [newQuestion, socket, pollId, user, submitting]);
+                if (response.error) {
+                    toast.error(response.error);
+                    return;
+                }
+
+                setNewQuestion('');
+            }
+        );
+    }, [newQuestion, socket, roomId, roomCode, user, submitting]);
 
     const handleUpvote = useCallback((questionId) => {
         if (!user) {
             toast.error('Please sign in to upvote');
             return;
         }
-        if (!socket) return;
+        if (!socket || !roomCode) return;
 
-        console.log(`[QNA] Upvoting question ${questionId}`);
-        socket.emit("qna:upvote", { questionId, pollId });
-    }, [socket, pollId, user]);
+        socket.emit('qna:upvote', { questionId, code: roomCode }, (response = {}) => {
+            if (response.error) {
+                toast.error(response.error);
+            }
+        });
+    }, [socket, roomCode, user]);
 
     const handleMarkAnswered = useCallback((questionId) => {
-        if (!socket) return;
-        console.log(`[QNA] Marking question ${questionId} as answered`);
-        socket.emit("qna:mark-answered", { questionId, pollId });
-    }, [socket, pollId]);
+        if (!socket || !roomId || !roomCode) return;
 
-    // Sort questions
+        socket.emit('qna:mark-answered', { questionId, roomId, code: roomCode }, (response = {}) => {
+            if (response.error) {
+                toast.error(response.error);
+            }
+        });
+    }, [socket, roomId, roomCode]);
+
     const sortedQuestions = [...questions].sort((a, b) => {
         if (sortBy === 'votes') return b.vote_count - a.vote_count;
         return new Date(b.created_at) - new Date(a.created_at);
@@ -227,8 +231,7 @@ const QnAPanel = ({ pollId, isPollCreator = false }) => {
                                 <QuestionItem
                                     key={q.id}
                                     question={q}
-                                    currentUserId={user?.id}
-                                    isPollCreator={isPollCreator}
+                                    isHost={isHost}
                                     onUpvote={handleUpvote}
                                     onMarkAnswered={handleMarkAnswered}
                                 />
@@ -246,8 +249,7 @@ const QnAPanel = ({ pollId, isPollCreator = false }) => {
                                 <QuestionItem
                                     key={q.id}
                                     question={q}
-                                    currentUserId={user?.id}
-                                    isPollCreator={isPollCreator}
+                                    isHost={isHost}
                                     onUpvote={handleUpvote}
                                     onMarkAnswered={handleMarkAnswered}
                                 />
@@ -261,7 +263,7 @@ const QnAPanel = ({ pollId, isPollCreator = false }) => {
 };
 
 // ─── Individual Question Component ─────────────────
-const QuestionItem = ({ question, currentUserId, isPollCreator, onUpvote, onMarkAnswered }) => {
+const QuestionItem = ({ question, isHost, onUpvote, onMarkAnswered }) => {
     const timeAgo = getTimeAgo(question.created_at);
 
     return (
@@ -299,8 +301,8 @@ const QuestionItem = ({ question, currentUserId, isPollCreator, onUpvote, onMark
                 </div>
             </div>
 
-            {/* Mark Answered (poll creator only) */}
-            {isPollCreator && !question.is_answered && (
+            {/* Mark Answered (host only) */}
+            {isHost && !question.is_answered && (
                 <button
                     onClick={() => onMarkAnswered(question.id)}
                     className="text-gray-500 hover:text-green-400 transition-colors self-start p-1"

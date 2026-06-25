@@ -1,277 +1,43 @@
-
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
-import Polls from './polls.jsx';
-import { BarChart3, Bookmark, PlusCircle, Users, LogOut, Lock, Copy, Check } from 'lucide-react';
-import { motion, useMotionValue, useSpring } from 'framer-motion';
-import { gsap } from 'gsap';
-import { Observer } from 'gsap/Observer';
+import { UserAuth } from '../context/AuthContext';
+import PageShell, { GlassSection } from '../components/ui/PageShell.jsx';
+import SpotlightCard from '../components/ui/SpotlightCard.jsx';
+import {
+  Activity,
+  ArrowUpRight,
+  BarChart3,
+  Bookmark,
+  Check,
+  Clock3,
+  Copy,
+  Eye,
+  Lock,
+  PlusCircle,
+  Shield,
+  Trophy,
+  Users,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
-gsap.registerPlugin(Observer);
+const surfaceClass =
+  'rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(14,19,29,0.72),rgba(10,14,22,0.9))] backdrop-blur-2xl';
 
-const springValues = {
-  damping: 30,
-  stiffness: 100,
-  mass: 2
-};
-
-const TiltedCard = ({
-  imageSrc,
-  altText = 'Tilted card image',
-  captionText = '',
-  containerHeight = '300px',
-  containerWidth = '100%',
-  imageHeight = '300px',
-  imageWidth = '300px',
-  scaleOnHover = 1.1,
-  rotateAmplitude = 14,
-  showMobileWarning = true,
-  showTooltip = true,
-  overlayContent = null,
-  displayOverlayContent = false
-}) => {
-  const ref = useRef(null);
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const rotateX = useSpring(useMotionValue(0), springValues);
-  const rotateY = useSpring(useMotionValue(0), springValues);
-  const scale = useSpring(1, springValues);
-  const opacity = useSpring(0);
-  const rotateFigcaption = useSpring(0, {
-    stiffness: 350,
-    damping: 30,
-    mass: 1
-  });
-
-  const [lastY, setLastY] = useState(0);
-
-  function handleMouse(e) {
-    if (!ref.current) return;
-
-    const rect = ref.current.getBoundingClientRect();
-    const offsetX = e.clientX - rect.left - rect.width / 2;
-    const offsetY = e.clientY - rect.top - rect.height / 2;
-
-    const rotationX = (offsetY / (rect.height / 2)) * -rotateAmplitude;
-    const rotationY = (offsetX / (rect.width / 2)) * rotateAmplitude;
-
-    rotateX.set(rotationX);
-    rotateY.set(rotationY);
-
-    x.set(e.clientX - rect.left);
-    y.set(e.clientY - rect.top);
-
-    const velocityY = offsetY - lastY;
-    rotateFigcaption.set(-velocityY * 0.6);
-    setLastY(offsetY);
-  }
-
-  function handleMouseEnter() {
-    scale.set(scaleOnHover);
-    opacity.set(1);
-  }
-
-  function handleMouseLeave() {
-    opacity.set(0);
-    scale.set(1);
-    rotateX.set(0);
-    rotateY.set(0);
-    rotateFigcaption.set(0);
-  }
-
-  return (
-    <figure
-      ref={ref}
-      className="relative w-full h-full [perspective:800px] flex flex-col items-center justify-center"
-      style={{
-        height: containerHeight,
-        width: containerWidth
-      }}
-      onMouseMove={handleMouse}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
-      {showMobileWarning && (
-        <div className="absolute top-4 text-center text-sm block sm:hidden">
-          This effect is not optimized for mobile. Check on desktop.
-        </div>
-      )}
-
-      <motion.div
-        className="relative [transform-style:preserve-3d]"
-        style={{
-          width: imageWidth,
-          height: imageHeight,
-          rotateX,
-          rotateY,
-          scale
-        }}
-      >
-        <motion.div
-          className="absolute top-0 left-0 object-cover rounded-[15px] will-change-transform [transform:translateZ(0)] bg-gradient-to-br from-blue-500/20 to-blue-600/10 backdrop-blur-md border-2 border-blue-500/30"
-          style={{
-            width: imageWidth,
-            height: imageHeight
-          }}
-        >
-          {overlayContent}
-        </motion.div>
-      </motion.div>
-
-      {showTooltip && (
-        <motion.figcaption
-          className="pointer-events-none absolute left-0 top-0 rounded-[4px] bg-white px-[10px] py-[4px] text-[10px] text-[#2d2d2d] opacity-0 z-[3] hidden sm:block"
-          style={{
-            x,
-            y,
-            opacity,
-            rotate: rotateFigcaption
-          }}
-        >
-          {captionText}
-        </motion.figcaption>
-      )}
-    </figure>
-  );
-};
-
-const FeatureCard = ({ icon, title, description, gradientColors, borderColor }) => (
-  <TiltedCard
-    imageSrc=""
-    altText={title}
-    captionText={title}
-    containerHeight="300px"
-    containerWidth="100%"
-    imageHeight="300px"
-    imageWidth="100%"
-    scaleOnHover={1.05}
-    rotateAmplitude={10}
-    showMobileWarning={false}
-    showTooltip={false}
-    displayOverlayContent={true}
-    overlayContent={
-      <div className={`p-8 h-full flex flex-col justify-center bg-gradient-to-br ${gradientColors} backdrop-blur-md border-2 ${borderColor} rounded-[15px]`}>
-        <div className={`${borderColor.replace('border-', 'bg-').replace('/30', '/30')} w-16 h-16 rounded-2xl flex items-center justify-center mb-6`}>
-          {icon}
-        </div>
-        <h2 className="text-2xl font-bold text-white mb-3">{title}</h2>
-        <p className="text-gray-200 text-base leading-relaxed">
-          {description}
-        </p>
-      </div>
-    }
-  />
-);
-
-const SpotlightCard = ({ children, className = '', spotlightColor = 'rgba(255, 255, 255, 0.25)' }) => {
-  const divRef = useRef(null);
-  const [isFocused, setIsFocused] = useState(false);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [opacity, setOpacity] = useState(0);
-
-  const handleMouseMove = e => {
-    if (!divRef.current || isFocused) return;
-    const rect = divRef.current.getBoundingClientRect();
-    setPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-  };
-
-  const handleFocus = () => {
-    setIsFocused(true);
-    setOpacity(0.6);
-  };
-
-  const handleBlur = () => {
-    setIsFocused(false);
-    setOpacity(0);
-  };
-
-  const handleMouseEnter = () => {
-    setOpacity(0.6);
-  };
-
-  const handleMouseLeave = () => {
-    setOpacity(0);
-  };
-
-  return (
-    <div
-      ref={divRef}
-      onMouseMove={handleMouseMove}
-      onFocus={handleFocus}
-      onBlur={handleBlur}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      className={`relative rounded-3xl border backdrop-blur-sm overflow-hidden ${className}`}
-    >
-      <div
-        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 ease-in-out"
-        style={{
-          opacity,
-          background: `radial-gradient(circle at ${position.x}px ${position.y}px, ${spotlightColor}, transparent 80%)`
-        }}
-      />
-      {children}
-    </div>
-  );
-};
-
-const featureItems = [
-  {
-    content: (
-      <div className="p-8 h-full flex flex-col justify-center bg-gradient-to-br from-blue-500/20 to-blue-600/10 backdrop-blur-md border-2 border-blue-500/30 rounded-[15px]">
-        <div className="bg-blue-500/30 w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
-          <PlusCircle size={32} className="text-blue-300" />
-        </div>
-        <h2 className="text-2xl font-bold text-white mb-3">Create Polls</h2>
-        <p className="text-gray-200 text-base leading-relaxed">
-          Create custom polls on any topic, add options, set permissions, and see responses in real-time.
-        </p>
-      </div>
-    )
-  },
-  {
-    content: (
-      <div className="p-8 h-full flex flex-col justify-center bg-gradient-to-br from-green-500/20 to-green-600/10 backdrop-blur-md border-2 border-green-500/30 rounded-[15px]">
-        <div className="bg-green-500/30 w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
-          <Users size={32} className="text-green-300" />
-        </div>
-        <h2 className="text-2xl font-bold text-white mb-3">Vote & Participate</h2>
-        <p className="text-gray-200 text-base leading-relaxed">
-          Browse public polls or join private ones. Cast your vote and see real-time results.
-        </p>
-      </div>
-    )
-  },
-  {
-    content: (
-      <div className="p-8 h-full flex flex-col justify-center bg-gradient-to-br from-purple-500/20 to-purple-600/10 backdrop-blur-md border-2 border-purple-500/30 rounded-[15px]">
-        <div className="bg-purple-500/30 w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
-          <Bookmark size={32} className="text-purple-300" />
-        </div>
-        <h2 className="text-2xl font-bold text-white mb-3">Bookmark & Track</h2>
-        <p className="text-gray-200 text-base leading-relaxed">
-          Save polls for later, view past participation, and stay updated on topics you care about.
-        </p>
-      </div>
-    )
-  }
-];
-
-const Dashboard = () => {
+function Dashboard() {
   const navigate = useNavigate();
-  const { session, signOut, user } = UserAuth();
+  const { session, user } = UserAuth();
   const [polls, setPolls] = useState([]);
   const [selectedPollId, setSelectedPollId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [copiedLink, setCopiedLink] = useState(null);
 
-  const userEmail = session?.user?.email;
-  const firstName = userEmail
-    ? userEmail.split('@')[0].replace(/[^a-zA-Z]/g, '') || 'User'
-    : 'User';
+  const firstName = useMemo(() => {
+    const userEmail = session?.user?.email;
+    return userEmail
+      ? userEmail.split('@')[0].replace(/[^a-zA-Z]/g, '') || 'User'
+      : 'User';
+  }, [session?.user?.email]);
 
   useEffect(() => {
     const fetchPolls = async () => {
@@ -291,24 +57,59 @@ const Dashboard = () => {
 
         if (error) throw error;
 
-        const pollsWithTotals = data.map(poll => ({
-          ...poll,
-          totalVotes: poll.options.reduce((sum, option) => sum + option.votes_count, 0)
-        }));
+        const mapped = (data || []).map((poll) => {
+          const totalVotes = (poll.options || []).reduce(
+            (sum, option) => sum + option.votes_count,
+            0,
+          );
 
-        setPolls(pollsWithTotals);
-        setLoading(false);
+          return {
+            ...poll,
+            totalVotes,
+          };
+        });
+
+        setPolls(mapped);
       } catch (error) {
         console.error('Error fetching polls:', error);
+      } finally {
         setLoading(false);
       }
     };
 
-    fetchPolls();
-  }, [user]);
+    if (user?.id) {
+      fetchPolls();
+    } else {
+      setLoading(false);
+    }
+  }, [user?.id]);
+
+  const totalVotes = useMemo(
+    () => polls.reduce((sum, poll) => sum + poll.totalVotes, 0),
+    [polls],
+  );
+
+  const protectedCount = useMemo(
+    () => polls.filter((poll) => poll.is_password_protected).length,
+    [polls],
+  );
+
+  const activeCount = useMemo(
+    () =>
+      polls.filter((poll) => {
+        if (!poll.expires_at) return true;
+        return new Date(poll.expires_at) > new Date();
+      }).length,
+    [polls],
+  );
+
+  const selectedPoll = useMemo(
+    () => polls.find((poll) => poll.id === selectedPollId) || null,
+    [polls, selectedPollId],
+  );
 
   const handleCreatePoll = () => {
-    navigate('/create-poll');
+    navigate('/create-poll', { state: { from: '/dashboard' } });
   };
 
   const generateJoinLink = async (pollId) => {
@@ -316,242 +117,373 @@ const Dashboard = () => {
       const link = `${window.location.origin}/polls/${pollId}`;
       await navigator.clipboard.writeText(link);
       setCopiedLink(pollId);
-      setTimeout(() => setCopiedLink(null), 2000);
+      setTimeout(() => setCopiedLink(null), 1800);
       toast.success('Poll link copied to clipboard');
-    } catch (err) {
-      console.error('Error Copying link:', err);
+    } catch (error) {
+      console.error('Error Copying link:', error);
       toast.error('Failed to copy link');
     }
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden ">
-      <div className="relative z-10 container mx-auto px-4 py-8 max-w-7xl">
-
-        <div className="flex flex-col items-center text-center mb-16">
-          <div className="mb-8 relative z-10">
-            <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-6 tracking-tight leading-tight "
-              style={{ fontFamily: 'Lato, sans-serif' }}>
-              Welcome back,
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-indigo-400 animate-gradient-x">
-                {firstName}!
-              </span>
-            </h1>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed font-light">
-              Create, participate, and track polls in real-time
-              <br />
-              <span className="text-gray-200 font-medium">with instant feedback and visualizations.</span>
-            </p>
-          </div>
-
-          <div className="flex flex-wrap justify-center gap-4">
-            <button
-              onClick={handleCreatePoll}
-              className="group bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-8 py-4 rounded-2xl font-semibold flex items-center gap-3 transition-all duration-300 shadow-lg hover:shadow-blue-500/25 hover:-translate-y-1"
-            >
-              <PlusCircle size={24} className="group-hover:rotate-90 transition-transform duration-300" />
+    <PageShell
+      width="max-w-7xl"
+      badge={<><BarChart3 size={16} /><span>Creator Workspace</span></>}
+      title={<>Workspace for <span className="text-[#f5dfc0]">{firstName}</span></>}
+      description="Run polls, review engagement, and manage live participation from one quieter workspace surface."
+      actions={
+        <>
+          <button
+            onClick={handleCreatePoll}
+            className="group rounded-2xl bg-[#f59d0d] px-6 py-3 font-semibold text-[#120d06] transition hover:-translate-y-0.5 hover:bg-[#f7b339]"
+          >
+            <span className="flex items-center gap-3">
+              <PlusCircle size={20} className="group-hover:rotate-90 transition-transform duration-300" />
               Create Poll
-            </button>
-            <button
-              onClick={() => navigate('/polls')}
-              className="group bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/10 text-white px-8 py-4 rounded-2xl font-semibold flex items-center gap-3 transition-all duration-300 hover:border-white/20 hover:-translate-y-1"
-            >
-              <BarChart3 size={24} className="group-hover:scale-110 transition-transform duration-300" />
-              Browse Polls
-            </button>
-          </div>
-        </div>
+            </span>
+          </button>
+          <button
+            onClick={() => navigate('/polls')}
+            className="group rounded-2xl border border-white/10 bg-white/[0.045] px-6 py-3 font-semibold text-white backdrop-blur-md transition hover:-translate-y-0.5 hover:border-white/16 hover:bg-white/[0.08]"
+          >
+            <span className="flex items-center gap-3">
+              <ArrowUpRight size={20} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300" />
+              Explore Polls
+            </span>
+          </button>
+        </>
+      }
+    >
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          icon={<BarChart3 className="h-5 w-5 text-orange-300" />}
+          label="Total polls"
+          value={polls.length}
+          note="All campaigns"
+          color="rgba(246,163,19,0.14)"
+        />
+        <StatCard
+          icon={<Users className="h-5 w-5 text-[#b9e7ee]" />}
+          label="Votes collected"
+          value={totalVotes}
+          note="Across your audience"
+          color="rgba(86,185,200,0.12)"
+        />
+        <StatCard
+          icon={<Clock3 className="h-5 w-5 text-emerald-300" />}
+          label="Active now"
+          value={activeCount}
+          note="Open for responses"
+          color="rgba(52,211,153,0.11)"
+        />
+        <StatCard
+          icon={<Lock className="h-5 w-5 text-[#d8c0f7]" />}
+          label="Protected"
+          value={protectedCount}
+          note="Password gated"
+          color="rgba(192,141,242,0.12)"
+        />
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 max-w-6xl mx-auto">
-          <SpotlightCard className="p-6" spotlightColor="rgba(34, 197, 94, 0.15)">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="bg-green-500/20 p-3 rounded-lg">
-                <BarChart3 size={24} className="text-green-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-white">Total Polls</h3>
-            </div>
-            <p className="text-4xl font-bold text-white">{polls.length}</p>
-            <p className="text-sm font-bold text-gray-400 mt-2">Active polling campaigns</p>
-          </SpotlightCard>
-
-          <SpotlightCard className="p-6" spotlightColor="rgba(168, 85, 247, 0.15)">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="bg-purple-500/20 p-3 rounded-lg">
-                <Users size={24} className="text-purple-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-white">Total Votes</h3>
-            </div>
-            <p className="text-4xl font-bold text-white">
-              {polls.reduce((sum, poll) => sum + poll.totalVotes, 0)}
-            </p>
-            <p className="text-sm font-bold text-gray-400 mt-2">Across all your polls</p>
-          </SpotlightCard>
-
-          <SpotlightCard className="p-6" spotlightColor="rgba(251, 191, 36, 0.15)">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="bg-yellow-500/20 p-3 rounded-lg">
-                <Bookmark size={24} className="text-yellow-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-white">Engagement</h3>
-            </div>
-            <p className="text-4xl font-bold text-white">
-              {polls.length > 0 ? Math.round(polls.reduce((sum, poll) => sum + poll.totalVotes, 0) / polls.length) : 0}
-            </p>
-            <p className="text-sm font-bold text-gray-400 mt-2">Average votes per poll</p>
-          </SpotlightCard>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10 mb-16 max-w-6xl mx-auto">
-          <FeatureCard
-            icon={<PlusCircle size={24} className="text-blue-300" />}
-            title="Create Polls"
-            description="Create custom polls on any topic, add options, set permissions, and see responses in real-time."
-            gradientColors="from-blue-500/20 to-blue-600/10"
-            borderColor="border-blue-500/30"
-          />
-
-          <FeatureCard
-            icon={<Users size={24} className="text-green-300" />}
-            title="Vote & Participate"
-            description="Browse public polls or join private ones. Cast your vote and see real-time results."
-            gradientColors="from-green-500/20 to-green-600/10"
-            borderColor="border-green-500/30"
-          />
-
-          <FeatureCard
-            icon={<Bookmark size={24} className="text-purple-300" />}
-            title="Bookmark & Track"
-            description="Save polls for later, view past participation, and stay updated on topics you care about."
-            gradientColors="from-purple-500/20 to-purple-600/10"
-            borderColor="border-purple-500/30"
-          />
-        </div>
-
-        {/* Polls Section with SpotlightCard */}
-        <SpotlightCard className="p-8 max-w-6xl mx-auto" spotlightColor="rgba(59, 130, 246, 0.15)">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center gap-3">
-              <div className="bg-blue-500/20 p-2 rounded-lg">
-                <BarChart3 size={28} className="text-blue-400" />
-              </div>
-              <h2 className="text-3xl font-bold text-white">Your Polls</h2>
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
+        <GlassSection className="p-5">
+          <div className="mb-5 flex items-center justify-between">
+            <div>
+              <h2 className="font-display text-[1.7rem] font-semibold text-white">Recent Polls</h2>
+              <p className="mt-1 text-sm text-slate-400">Select one poll to inspect, share, or open.</p>
             </div>
             <button
               onClick={handleCreatePoll}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-colors"
+              className="rounded-xl border border-white/10 bg-white/[0.045] px-3 py-2 text-sm font-medium text-white transition hover:bg-white/[0.08]"
             >
-              <PlusCircle size={18} />
-              New Poll
+              New
             </button>
           </div>
 
           {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="h-24 animate-pulse rounded-2xl bg-white/[0.045]" />
+              ))}
             </div>
           ) : polls.length === 0 ? (
-            <div className="text-center py-16">
-              <div className="mb-6 flex justify-center">
-                <div className="bg-blue-500/10 p-6 rounded-full">
-                  <BarChart3 size={48} className="text-blue-400" />
-                </div>
+            <div className={`${surfaceClass} p-6 text-center`}>
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f59d0d]/12">
+                <PlusCircle className="h-6 w-6 text-orange-300" />
               </div>
-              <h3 className="text-2xl font-semibold text-white mb-3">No polls yet</h3>
-              <p className="text-gray-400 mb-6 text-lg">Create your first poll to get started</p>
+              <h3 className="font-display text-xl font-semibold text-white">No polls yet</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-400">
+                Start with one structured question and let the workspace grow from there.
+              </p>
               <button
                 onClick={handleCreatePoll}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium flex items-center gap-2 mx-auto transition-colors"
+                className="mt-5 rounded-xl bg-[#f59d0d] px-5 py-3 text-sm font-semibold text-[#120d06]"
               >
-                <PlusCircle size={20} />
-                Create Poll
+                Create your first poll
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Poll List */}
-              <SpotlightCard className="p-6" spotlightColor="rgba(59, 130, 246, 0.1)">
-                <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-                  <BarChart3 size={20} className="text-blue-400" />
-                  Select a Poll
-                </h3>
-                <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-blue-500/50 scrollbar-track-transparent">
-                  {polls.map(poll => (
-                    <div
-                      key={poll.id}
-                      className={`p-5 rounded-xl cursor-pointer transition-all duration-200 border ${selectedPollId === poll.id
-                        ? 'bg-blue-600/20 border-blue-500/50'
-                        : 'bg-white/5 hover:bg-white/10 border-white/10'
-                        }`}
-                      onClick={() => setSelectedPollId(poll.id)}
-                    >
-                      <div className="flex justify-between items-start mb-3">
-                        <h4 className="font-semibold text-white text-lg flex-1">{poll.question}</h4>
-                        {poll.is_password_protected && (
-                          <Lock size={18} className="text-yellow-400 flex-shrink-0 ml-2" />
-                        )}
-                      </div>
-
-                      <div className="flex justify-between text-sm text-gray-400 mb-3">
-                        <span>{new Date(poll.created_at).toLocaleDateString()}</span>
-                        <span>{poll.totalVotes} total votes</span>
-                      </div>
-
-                      {poll.options && poll.options.length > 0 && (
-                        <div className="space-y-2 mb-3">
-                          {poll.options.map(option => (
-                            <div key={option.id} className="flex justify-between items-center text-sm bg-white/5 rounded-lg px-3 py-2">
-                              <span className="text-gray-300 truncate max-w-[70%]">{option.option_text}</span>
-                              <span className="text-blue-400 font-medium">{option.votes_count}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          generateJoinLink(poll.id);
-                        }}
-                        className="w-full bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors border border-blue-500/30"
-                      >
-                        {copiedLink === poll.id ? (
-                          <>
-                            <Check size={16} />
-                            Link Copied!
-                          </>
-                        ) : (
-                          <>
-                            <Copy size={16} />
-                            Copy Share Link
-                          </>
-                        )}
-                      </button>
+            <div className="space-y-3">
+              {polls.map((poll) => (
+                <button
+                  key={poll.id}
+                  type="button"
+                  onClick={() => setSelectedPollId(poll.id)}
+                  className={`w-full rounded-[22px] border p-4 text-left transition ${
+                    selectedPollId === poll.id
+                      ? 'border-[#f59d0d]/28 bg-[#f59d0d]/8'
+                      : 'border-white/8 bg-white/[0.03] hover:border-white/14 hover:bg-white/[0.05]'
+                  }`}
+                >
+                  <div className="mb-3 flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="line-clamp-2 font-display text-lg font-semibold text-white">
+                        {poll.question}
+                      </h3>
+                      <p className="mt-2 text-xs uppercase tracking-[0.22em] text-slate-500">
+                        {new Date(poll.created_at).toLocaleDateString()}
+                      </p>
                     </div>
-                  ))}
-                </div>
-              </SpotlightCard>
-
-              {/* Poll Display */}
-              <SpotlightCard className="p-6" spotlightColor="rgba(59, 130, 246, 0.1)">
-                {selectedPollId ? (
-                  <Polls pollId={selectedPollId} isDashboardView={true} />
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-center py-16">
-                    <div className="mb-6 bg-blue-500/10 p-6 rounded-full">
-                      <BarChart3 size={48} className="text-blue-400" />
-                    </div>
-                    <h3 className="text-2xl font-semibold text-white mb-3">Select a poll to view</h3>
-                    <p className="text-gray-400 text-lg">Choose a poll from the list to see details and vote</p>
+                    {poll.is_password_protected ? (
+                      <span className="rounded-full border border-amber-200/14 bg-[#f59d0d]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#f5d8b2]">
+                        Locked
+                      </span>
+                    ) : null}
                   </div>
-                )}
-              </SpotlightCard>
+
+                  <div className="mb-4 grid grid-cols-2 gap-2 text-sm text-slate-300">
+                    <div className="rounded-xl bg-white/[0.045] px-3 py-2">
+                      <span className="block text-[11px] uppercase tracking-[0.18em] text-slate-500">Votes</span>
+                      <span className="mt-1 block font-semibold text-white">{poll.totalVotes}</span>
+                    </div>
+                    <div className="rounded-xl bg-white/[0.045] px-3 py-2">
+                      <span className="block text-[11px] uppercase tracking-[0.18em] text-slate-500">Options</span>
+                      <span className="mt-1 block font-semibold text-white">{poll.options?.length || 0}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <span className="inline-flex flex-1 items-center justify-center rounded-xl bg-white/[0.045] px-3 py-2 text-sm font-medium text-slate-200">
+                      Select
+                    </span>
+                    <span
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        generateJoinLink(poll.id);
+                      }}
+                      className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/[0.045] px-3 py-2 text-sm font-medium text-slate-200"
+                    >
+                      {copiedLink === poll.id ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    </span>
+                  </div>
+                </button>
+              ))}
             </div>
           )}
-        </SpotlightCard>
+        </GlassSection>
 
+        <GlassSection className="p-5">
+          <div className="mb-5 flex items-center justify-between">
+            <div>
+              <h2 className="font-display text-[1.7rem] font-semibold text-white">Selected Poll</h2>
+              <p className="mt-1 text-sm text-slate-400">Review the essentials here, then open the full poll or analytics.</p>
+            </div>
+            {selectedPollId ? (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => navigate(`/polls/${selectedPollId}`)}
+                  className="rounded-xl border border-white/10 bg-white/[0.045] px-4 py-2 text-sm font-medium text-white transition hover:bg-white/[0.08]"
+                >
+                  Open Poll
+                </button>
+                <button
+                  onClick={() => navigate(`/polls/${selectedPollId}/analytics`)}
+                  className="rounded-xl bg-[#f59d0d] px-4 py-2 text-sm font-medium text-[#120d06] transition hover:bg-[#f7b339]"
+                >
+                  Analytics
+                </button>
+              </div>
+            ) : null}
+          </div>
+
+          <SpotlightCard
+            className="min-h-[580px] rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(14,19,29,0.72),rgba(10,14,22,0.9))] p-5"
+            spotlightColor="rgba(246,163,19,0.1)"
+          >
+            {selectedPoll ? (
+              <SelectedPollPanel
+                poll={selectedPoll}
+                onOpen={() => navigate(`/polls/${selectedPoll.id}`)}
+                onAnalytics={() => navigate(`/polls/${selectedPoll.id}/analytics`)}
+                onCopy={() => generateJoinLink(selectedPoll.id)}
+                copied={copiedLink === selectedPoll.id}
+              />
+            ) : (
+              <div className="flex h-full flex-col items-center justify-center text-center">
+                <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[28px] bg-[#f59d0d]/10">
+                  <Bookmark className="h-9 w-9 text-orange-300" />
+                </div>
+                <h3 className="font-display text-3xl font-semibold text-white">Choose a poll to continue</h3>
+                <p className="mt-3 max-w-md text-base leading-7 text-slate-400">
+                  This pane becomes the active detail surface for whichever poll you select from the left column.
+                </p>
+              </div>
+            )}
+          </SpotlightCard>
+        </GlassSection>
+      </div>
+    </PageShell>
+  );
+}
+
+function SelectedPollPanel({ poll, onOpen, onAnalytics, onCopy, copied }) {
+  const isExpired = poll.expires_at ? new Date(poll.expires_at) < new Date() : false;
+  const topOption = (poll.options || []).reduce((winner, option) => {
+    if (!winner || option.votes_count > winner.votes_count) return option;
+    return winner;
+  }, null);
+
+  return (
+    <div className="flex h-full flex-col">
+      <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-6">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] ${
+            isExpired
+              ? 'bg-red-500/12 text-red-300'
+              : 'bg-[#f59d0d]/12 text-[#f5d8b2]'
+          }`}>
+            {isExpired ? 'Closed' : 'Active'}
+          </span>
+          {poll.is_password_protected ? (
+            <span className="rounded-full bg-[#f59d0d]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#f5d8b2]">
+              Locked
+            </span>
+          ) : null}
+        </div>
+
+        <h3 className="mt-5 max-w-3xl font-display text-4xl font-semibold tracking-[-0.05em] text-white">
+          {poll.question}
+        </h3>
+
+        <p className="mt-4 max-w-2xl text-base leading-7 text-slate-400">
+          Created on {new Date(poll.created_at).toLocaleDateString()}.
+          {' '}
+          {isExpired ? 'This poll is no longer accepting votes.' : 'This poll is still open for responses.'}
+        </p>
+      </div>
+
+      <div className="mt-5 grid gap-4 md:grid-cols-3">
+        <SnapshotCard
+          icon={<Users className="h-5 w-5 text-orange-200" />}
+          label="Votes"
+          value={poll.totalVotes}
+          note="Total responses"
+        />
+        <SnapshotCard
+          icon={<Activity className="h-5 w-5 text-sky-200" />}
+          label="Options"
+          value={poll.options?.length || 0}
+          note="Choices available"
+        />
+        <SnapshotCard
+          icon={<Shield className="h-5 w-5 text-emerald-200" />}
+          label="Access"
+          value={poll.is_password_protected ? 'Private' : 'Open'}
+          note={poll.is_password_protected ? 'Password protected' : 'Public access'}
+        />
+      </div>
+
+      <div className="mt-5 rounded-[24px] border border-white/10 bg-white/[0.03] p-6">
+        <div className="flex items-center gap-2 text-white">
+          <Trophy className="h-5 w-5 text-orange-200" />
+          <h4 className="font-display text-2xl font-semibold">Top Option</h4>
+        </div>
+
+        {topOption ? (
+          <div className="mt-5">
+            <div className="flex items-end justify-between gap-4">
+              <p className="text-xl font-semibold text-white">{topOption.option_text}</p>
+              <p className="text-sm text-orange-200">
+                {poll.totalVotes > 0 ? Math.round((topOption.votes_count / poll.totalVotes) * 100) : 0}% share
+              </p>
+            </div>
+            <div className="mt-4 h-3 overflow-hidden rounded-full bg-white/8">
+              <div
+                className="h-full rounded-full bg-[#f59d0d]"
+                style={{
+                  width: `${poll.totalVotes > 0 ? Math.round((topOption.votes_count / poll.totalVotes) * 100) : 0}%`,
+                }}
+              />
+            </div>
+            <div className="mt-3 flex justify-between text-sm text-slate-400">
+              <span>{topOption.votes_count} votes</span>
+              <span>{poll.totalVotes} total</span>
+            </div>
+          </div>
+        ) : (
+          <p className="mt-4 text-sm text-slate-400">No options available yet.</p>
+        )}
+      </div>
+
+      <div className="mt-5 flex flex-wrap gap-3">
+        <button
+          type="button"
+          onClick={onOpen}
+          className="inline-flex items-center gap-2 rounded-2xl bg-[#f59d0d] px-5 py-3 text-sm font-semibold text-[#120d06] transition hover:bg-[#f7b339]"
+        >
+          <Eye className="h-4 w-4" />
+          Open Full Poll
+        </button>
+        <button
+          type="button"
+          onClick={onAnalytics}
+          className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.045] px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/[0.08]"
+        >
+          <BarChart3 className="h-4 w-4" />
+          View Analytics
+        </button>
+        <button
+          type="button"
+          onClick={onCopy}
+          className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.045] px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/[0.08]"
+        >
+          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+          {copied ? 'Copied Link' : 'Copy Link'}
+        </button>
       </div>
     </div>
   );
-};
+}
 
-export default Dashboard; 
+function SnapshotCard({ icon, label, value, note }) {
+  return (
+    <div className="rounded-[22px] border border-white/10 bg-white/[0.03] p-5">
+      <div className="flex items-center justify-between">
+        <div className="rounded-2xl bg-white/[0.045] p-3">{icon}</div>
+        <span className="text-[11px] uppercase tracking-[0.22em] text-slate-500">{label}</span>
+      </div>
+      <div className="mt-4 font-display text-3xl font-semibold text-white">{value}</div>
+      <p className="mt-2 text-sm text-slate-400">{note}</p>
+    </div>
+  );
+}
+
+function StatCard({ icon, label, value, note, color }) {
+  return (
+    <SpotlightCard
+      className={`${surfaceClass} p-6`}
+      spotlightColor={color}
+    >
+      <div className="mb-4 flex items-center justify-between">
+        <div className="rounded-2xl bg-white/[0.045] p-3 ring-1 ring-white/8">
+          {icon}
+        </div>
+        <span className="text-[11px] uppercase tracking-[0.22em] text-slate-500">{label}</span>
+      </div>
+      <div className="font-display text-4xl font-semibold text-white">{value}</div>
+      <p className="mt-2 text-sm text-slate-400">{note}</p>
+    </SpotlightCard>
+  );
+}
+
+export default Dashboard;

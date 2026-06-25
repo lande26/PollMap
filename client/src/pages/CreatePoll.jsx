@@ -299,14 +299,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { PlusCircle, X, Lock, Clock, Upload, Loader2, AlertCircle, Sparkles, FileImage } from 'lucide-react';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { PlusCircle, X, Upload, Loader2, AlertCircle, Sparkles, FileImage, ArrowLeft, MessageSquareText } from 'lucide-react';
 import { UserAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
 import { toast } from 'react-hot-toast';
+import PageShell, { GlassSection } from '../components/ui/PageShell.jsx';
+import { extractPollFromFile } from '../lib/pollOcr.js';
 
 const CreatePoll = () => {
   const [question, setQuestion] = useState('');
@@ -327,6 +327,8 @@ const CreatePoll = () => {
   const location = useLocation();
 
   const { user } = UserAuth();
+  const isRoomFlow = Boolean(location.state?.roomId);
+  const returnPath = location.state?.from || (isRoomFlow ? `/rooms/${location.state.roomCode}` : '/dashboard');
 
   useEffect(() => {
     if (location.state?.ocrData) {
@@ -476,68 +478,12 @@ const CreatePoll = () => {
     processOCR(file);
   };
 
-  const fileToGenerativePart = async (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result.split(',')[1];
-        resolve({
-          inlineData: {
-            data: base64String,
-            mimeType: file.type,
-          },
-        });
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
-
   const processOCR = async (file) => {
     setOcrLoading(true);
     setOcrError(null);
 
     try {
-      // Get API key from environment variable
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-
-      if (!apiKey) {
-        throw new Error('Gemini API key not configured. Please add VITE_GEMINI_API_KEY to your .env file');
-      }
-
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
-      const imagePart = await fileToGenerativePart(file);
-
-      const prompt = `Analyze this image and extract poll information. 
-      You must respond with ONLY a valid JSON object in this exact format:
-      {
-        "question": "the poll question",
-        "options": ["option1", "option2", "option3", ...]
-      }
-      
-      If the image contains a poll question and multiple choice options, extract them.
-      If the image doesn't contain clear poll information, still provide a JSON response with empty or placeholder values.
-      Do not include any markdown formatting, explanations, or additional text - just the raw JSON object.`;
-
-      const result = await model.generateContent([prompt, imagePart]);
-      const response = await result.response;
-      const text = response.text();
-
-      let jsonText = text.trim();
-      if (jsonText.startsWith('```json')) {
-        jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-      } else if (jsonText.startsWith('```')) {
-        jsonText = jsonText.replace(/```\n?/g, '');
-      }
-
-      const parsedData = JSON.parse(jsonText);
-
-      if (!parsedData.question || !parsedData.options || !Array.isArray(parsedData.options)) {
-        throw new Error("Invalid response format from AI");
-      }
-
+      const parsedData = await extractPollFromFile(file);
       setOcrResult(parsedData);
       setQuestion(parsedData.question);
       setOptions(parsedData.options);
@@ -559,32 +505,33 @@ const CreatePoll = () => {
   };
 
   return (
-    <div className="min-h-screen relative py-8 px-4">
-      <div className="absolute inset-0 bg-gradient-to-b via-transparent pointer-events-none" />
-
-      <div className="relative z-10 container mx-auto max-w-7xl">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-3 px-4 py-2 rounded-full bg-indigo-500/15 border border-indigo-400/30 backdrop-blur-md">
-            <Sparkles className="w-4 h-4 text-indigo-300" />
-            <span className="text-sm text-indigo-200 font-medium">Create Your Poll</span>
-          </div>
-          <h1 className="text-4xl font-bold text-white mb-2">
-            Share Your Question
-          </h1>
-          <p className="text-gray-400 text-base">
-            Create manually or extract from an image using AI
-          </p>
-        </div>
-
+    <PageShell
+      width="max-w-7xl"
+      badge={<><Sparkles className="w-4 h-4 text-orange-200" /><span>{isRoomFlow ? 'Create Room Poll' : 'Create Your Poll'}</span></>}
+      title={isRoomFlow ? 'Create a live room poll' : 'Share your question'}
+      description={isRoomFlow
+        ? `Build a poll directly for room ${location.state?.roomCode}. Once created, the room flow resumes automatically.`
+        : 'Create a poll manually or extract it from an image/PDF without breaking the main product flow.'}
+      actions={
+        <button
+          type="button"
+          onClick={() => navigate(returnPath)}
+          className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </button>
+      }
+    >
         <div className="grid lg:grid-cols-2 gap-6">
-          {/* Left Column - Manual Creation */}
-          <Card className="bg-[#0f1729]/60 backdrop-blur-xl border-indigo-500/20 shadow-2xl shadow-indigo-900/20">
-            <CardHeader className="border-b border-indigo-500/20 pb-5">
+          <GlassSection className="p-1">
+          <Card className="border-orange-400/15 bg-[#0f1729]/60 shadow-none backdrop-blur-xl">
+            <CardHeader className="border-b border-orange-400/15 pb-5">
               <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
-                <span className="w-8 h-8 rounded-lg bg-indigo-500/25 flex items-center justify-center text-indigo-300 text-sm">1</span>
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/18 text-sm text-orange-200">1</span>
                 Manual Creation
               </CardTitle>
-              <p className="text-gray-400 text-sm">Create your poll from scratch</p>
+              <p className="text-gray-400 text-sm">Compose the poll structure and room settings</p>
             </CardHeader>
 
             <CardContent className="pt-6 space-y-6">
@@ -603,7 +550,7 @@ const CreatePoll = () => {
                   id="question"
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
-                  className="w-full bg-[#0a0f1c]/40 border-indigo-400/20 text-white placeholder:text-gray-500 focus:border-indigo-400/50 focus:ring-2 focus:ring-indigo-500/20 min-h-[100px] resize-none backdrop-blur-sm transition-all text-sm"
+                  className="min-h-[100px] w-full resize-none bg-[#0a0f1c]/40 text-sm text-white placeholder:text-gray-500 backdrop-blur-sm transition-all focus:border-orange-400/40 focus:ring-2 focus:ring-orange-400/15"
                   placeholder="What would you like to ask?"
                 />
               </div>
@@ -619,7 +566,7 @@ const CreatePoll = () => {
                     disabled={options.length >= 10}
                     variant="ghost"
                     size="sm"
-                    className="border border-indigo-400/30 text-indigo-300 hover:bg-indigo-500/15 hover:border-indigo-400/50 disabled:opacity-30 h-8 text-xs"
+                    className="h-8 border border-orange-400/25 text-xs text-orange-200 hover:border-orange-300/40 hover:bg-orange-500/10 disabled:opacity-30"
                   >
                     <PlusCircle size={14} className="mr-1.5" />
                     Add
@@ -630,14 +577,14 @@ const CreatePoll = () => {
                   {options.map((option, index) => (
                     <div key={index} className="flex items-center gap-2 group">
                       <div className="flex-1 relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-400/60 font-medium text-xs">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-medium text-orange-200/70">
                           {String.fromCharCode(65 + index)}
                         </span>
                         <Input
                           type="text"
                           value={option}
                           onChange={(e) => handleOptionChange(index, e.target.value)}
-                          className="w-full pl-9 pr-3 h-10 bg-[#0a0f1c]/40 border-indigo-400/20 text-white placeholder:text-gray-500 focus:border-indigo-400/50 focus:ring-2 focus:ring-indigo-500/20 backdrop-blur-sm text-sm"
+                          className="h-10 w-full bg-[#0a0f1c]/40 pl-9 pr-3 text-sm text-white placeholder:text-gray-500 backdrop-blur-sm focus:border-orange-400/40 focus:ring-2 focus:ring-orange-400/15"
                           placeholder={`Option ${index + 1}`}
                         />
                       </div>
@@ -664,7 +611,7 @@ const CreatePoll = () => {
                 <Label className="text-white font-medium text-sm">Poll Settings</Label>
 
 
-                <div className="space-y-6 bg-[#0a0f1c]/30 backdrop-blur-sm border border-indigo-400/20 p-4 rounded-lg">
+                <div className="space-y-6 rounded-lg border border-orange-400/15 bg-[#0a0f1c]/30 p-4 backdrop-blur-sm">
                   {/* Password Protection Section */}
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
@@ -678,7 +625,7 @@ const CreatePoll = () => {
                         id="passwordProtection"
                         checked={isPasswordProtected}
                         onCheckedChange={setIsPasswordProtected}
-                        className="data-[state=checked]:bg-indigo-500"
+                        className="data-[state=checked]:bg-orange-500"
                       />
                     </div>
 
@@ -692,14 +639,14 @@ const CreatePoll = () => {
                           id="password"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          className="h-9 bg-[#060a14]/60 border-indigo-400/20 text-white placeholder:text-gray-500 focus:border-indigo-400/50 focus:ring-2 focus:ring-indigo-500/20 text-sm"
+                          className="h-9 border-orange-400/15 bg-[#060a14]/60 text-sm text-white placeholder:text-gray-500 focus:border-orange-400/40 focus:ring-2 focus:ring-orange-400/15"
                           placeholder="Enter password"
                         />
                       </div>
                     )}
                   </div>
 
-                  <Separator className="bg-indigo-500/20" />
+                  <Separator className="bg-orange-400/15" />
 
                   {/* Expiration Section */}
                   <div className="space-y-4">
@@ -714,7 +661,7 @@ const CreatePoll = () => {
                         id="expiration"
                         checked={hasExpiration}
                         onCheckedChange={setHasExpiration}
-                        className="data-[state=checked]:bg-indigo-500"
+                        className="data-[state=checked]:bg-orange-500"
                       />
                     </div>
 
@@ -728,7 +675,7 @@ const CreatePoll = () => {
                           id="expiresAt"
                           value={expiresAt}
                           onChange={(e) => setExpiresAt(e.target.value)}
-                          className="h-9 bg-[#060a14]/60 border-indigo-400/20 text-white focus:border-indigo-400/50 focus:ring-2 focus:ring-indigo-500/20 text-sm"
+                          className="h-9 border-orange-400/15 bg-[#060a14]/60 text-sm text-white focus:border-orange-400/40 focus:ring-2 focus:ring-orange-400/15"
                           style={{ colorScheme: 'dark' }}
                         />
                       </div>
@@ -739,12 +686,12 @@ const CreatePoll = () => {
 
               </div>
 
-              <Separator className="my-4 bg-indigo-500/20" />
+              <Separator className="my-4 bg-orange-400/15" />
 
               <div className="flex justify-end gap-3">
                 <Button
                   type="button"
-                  onClick={() => navigate('/dashboard')}
+                  onClick={() => navigate(returnPath)}
                   variant="outline"
                   className="border-gray-600/40 text-gray-300 hover:bg-gray-700/30 h-10 px-5 text-sm"
                 >
@@ -754,7 +701,7 @@ const CreatePoll = () => {
                   type="submit"
                   onClick={handleSubmit}
                   disabled={loading}
-                  className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-500/30 disabled:opacity-50 h-10 px-6 text-sm font-medium"
+                  className="h-10 bg-gradient-to-r from-orange-500 to-amber-400 px-6 text-sm font-medium text-slate-950 shadow-lg shadow-orange-500/20 hover:from-orange-400 hover:to-amber-300 disabled:opacity-50"
                 >
                   {loading ? (
                     <>
@@ -772,15 +719,17 @@ const CreatePoll = () => {
               </div>
             </CardContent>
           </Card>
+          </GlassSection>
 
           {/* Right Column - OCR Upload */}
-          <Card className="bg-[#0f1729]/60 backdrop-blur-xl border-purple-500/20 shadow-2xl shadow-purple-900/20">
+          <GlassSection className="p-1">
+          <Card className="bg-[#0f1729]/60 backdrop-blur-xl border-purple-500/20 shadow-none">
             <CardHeader className="border-b border-purple-500/20 pb-5">
               <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
                 <span className="w-8 h-8 rounded-lg bg-purple-500/25 flex items-center justify-center text-purple-300 text-sm">2</span>
                 Extract from Image/PDF
               </CardTitle>
-              <p className="text-gray-400 text-sm">Upload and let AI do the work</p>
+              <p className="text-gray-400 text-sm">Upload a file to prefill the poll</p>
             </CardHeader>
 
             <CardContent className="pt-6 space-y-5">
@@ -839,7 +788,7 @@ const CreatePoll = () => {
               {ocrLoading && (
                 <div className="flex flex-col items-center justify-center py-8">
                   <Loader2 className="animate-spin h-12 w-12 text-purple-400 mb-4" />
-                  <p className="text-purple-300 font-medium">Analyzing with Gemini AI...</p>
+                  <p className="text-purple-300 font-medium">Analyzing file...</p>
                   <p className="text-gray-400 text-sm mt-1">This may take a few seconds</p>
                 </div>
               )}
@@ -888,9 +837,26 @@ const CreatePoll = () => {
               )}
             </CardContent>
           </Card>
+          </GlassSection>
         </div>
-      </div>
-    </div>
+        <GlassSection className="px-6 py-5">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 rounded-2xl bg-blue-500/10 p-3 text-blue-300">
+                <MessageSquareText className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="font-display text-lg font-semibold text-white">Flow notes</h2>
+                <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-300">
+                  {isRoomFlow
+                    ? 'This poll will be tied to the current live room. After creation you are sent back to the room context instead of getting stranded on a separate page.'
+                    : 'After creation you move straight into the poll detail surface.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </GlassSection>
+    </PageShell>
   );
 };
 

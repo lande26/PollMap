@@ -5,6 +5,7 @@ import PasswordProtectedPoll from '../components/ProtectedRoute/PasswordProtecte
 import { supabase } from '../supabaseClient';
 import { UserAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
+import PageShell, { GlassSection } from '../components/ui/PageShell.jsx';
 
 const PollPage = () => {
   const { pollId } = useParams();
@@ -61,26 +62,46 @@ const PollPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900  to-slate-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-      </div>
+      <PageShell
+        width="max-w-4xl"
+        badge={<span>Poll Access</span>}
+        title="Opening poll"
+        description="Loading the poll surface and checking access requirements."
+      >
+        <GlassSection className="flex min-h-[320px] items-center justify-center">
+          <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-orange-400"></div>
+        </GlassSection>
+      </PageShell>
     );
   }
   
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900  to-slate-900">
-        <div className="text-center">
+      <PageShell
+        width="max-w-4xl"
+        badge={<span>Poll Access</span>}
+        title="Error loading poll"
+        description="The single-poll screen failed before it could mount."
+      >
+        <GlassSection className="px-8 py-14 text-center">
           <div className="text-red-400 text-xl mb-4">Error loading poll</div>
           <div className="text-gray-400">{error}</div>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
+          <div className="mt-6 flex items-center justify-center gap-3">
+            <button 
+              onClick={() => navigate('/polls')} 
+              className="px-4 py-2 border border-white/10 bg-white/5 text-white rounded-lg hover:bg-white/10"
+            >
+              Back to Polls
+            </button>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="rounded-lg bg-gradient-to-r from-orange-500 to-amber-400 px-4 py-2 text-slate-950 hover:from-orange-400 hover:to-amber-300"
+            >
+              Try Again
+            </button>
+          </div>
+        </GlassSection>
+      </PageShell>
     );
   }
   

@@ -24,8 +24,10 @@ import {
   PieChart, LineChart, Target, TrendingUp as TrendingUpIcon
 } from 'lucide-react';
 import { toast } from 'sonner';
+import PageShell, { GlassSection } from '../components/ui/PageShell.jsx';
 
 const NIVO_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#6366F1', '#EC4899', '#84CC16'];
+const panelClass = 'border border-white/10 bg-[linear-gradient(180deg,rgba(12,19,36,0.88),rgba(8,14,28,0.82))] shadow-none backdrop-blur-xl';
 
 const PollAnalytics = () => {
   const { pollId } = useParams();
@@ -156,20 +158,32 @@ const PollAnalytics = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br ">
-        <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-          <p className="text-white text-lg">Loading analytics...</p>
-        </div>
-      </div>
+      <PageShell
+        width="max-w-5xl"
+        badge={<><BarChart3 className="h-4 w-4" /><span>Poll Analytics</span></>}
+        title="Loading analytics"
+        description="Preparing the results workspace."
+      >
+        <GlassSection className="flex min-h-[320px] items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-orange-400"></div>
+            <p className="text-lg text-white">Loading analytics...</p>
+          </div>
+        </GlassSection>
+      </PageShell>
     );
   }
 
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br  p-8">
-        <Card className="bg-[#10172A]/80 backdrop-blur border border-gray-700 max-w-md text-center">
+      <PageShell
+        width="max-w-4xl"
+        badge={<><BarChart3 className="h-4 w-4" /><span>Poll Analytics</span></>}
+        title="Unable to load analytics"
+        description="The analytics surface could not be opened."
+      >
+        <Card className="mx-auto max-w-md text-center border-white/10 bg-[#10172A]/80 backdrop-blur">
           <CardContent className="pt-6">
             <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <div className="h-8 w-8 text-red-400">!</div>
@@ -178,45 +192,61 @@ const PollAnalytics = () => {
             <p className="text-gray-300 mb-4">{error}</p>
             <Button
               onClick={fetchPoll}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-gradient-to-r from-orange-500 to-amber-400 text-slate-950 hover:from-orange-400 hover:to-amber-300"
             >
               Try Again
             </Button>
           </CardContent>
         </Card>
-      </div>
+      </PageShell>
     );
   }
 
   if (!poll) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br  p-8">
-        <Card className="bg-[#10172A]/80 backdrop-blur border border-gray-700 max-w-md text-center">
+      <PageShell
+        width="max-w-4xl"
+        badge={<><BarChart3 className="h-4 w-4" /><span>Poll Analytics</span></>}
+        title="Poll not found"
+        description="This analytics route no longer points to a valid poll."
+      >
+        <Card className="mx-auto max-w-md text-center border-white/10 bg-[#10172A]/80 backdrop-blur">
           <CardContent className="pt-6">
             <h3 className="text-xl font-semibold text-white mb-2">Poll Not Found</h3>
             <p className="text-gray-300 mb-4">The poll you're looking for doesn't exist or has been removed.</p>
             <Button
               onClick={() => navigate('/polls')}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-gradient-to-r from-orange-500 to-amber-400 text-slate-950 hover:from-orange-400 hover:to-amber-300"
             >
               Back to Polls
             </Button>
           </CardContent>
         </Card>
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br ">
-
-
-      {/* Main Content */}
-      <div className="pt-20 px-6 pb-6" ref={contentRef}>
-        <div className="max-w-7xl mx-auto">
+    <PageShell
+      width="max-w-7xl"
+      badge={<><BarChart3 className="h-4 w-4" /><span>Poll Analytics</span></>}
+      title="Analytics overview"
+      description="Review poll performance, compare options, and export a cleaner breakdown."
+      actions={
+        <button
+          type="button"
+          onClick={() => navigate(`/polls/${pollId}`)}
+          className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to poll
+        </button>
+      }
+    >
+      <div ref={contentRef}>
           {/* Key Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <Card className="bg-[#10172A]/80 backdrop-blur border border-gray-700">
+            <Card className={panelClass}>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -224,14 +254,14 @@ const PollAnalytics = () => {
                     <p className="text-3xl font-bold text-white">{poll.totalVotes}</p>
                     <p className="text-xs text-gray-500 mt-1">All time</p>
                   </div>
-                  <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                    <Users className="h-6 w-6 text-blue-400" />
+                  <div className="w-12 h-12 bg-orange-500/12 rounded-xl flex items-center justify-center">
+                    <Users className="h-6 w-6 text-orange-200" />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-[#10172A]/80 backdrop-blur border border-gray-700">
+            <Card className={panelClass}>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -239,14 +269,14 @@ const PollAnalytics = () => {
                     <p className="text-3xl font-bold text-white">{poll.options?.length || 0}</p>
                     <p className="text-xs text-gray-500 mt-1">Choices</p>
                   </div>
-                  <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
-                    <Vote className="h-6 w-6 text-green-400" />
+                  <div className="w-12 h-12 bg-sky-500/12 rounded-xl flex items-center justify-center">
+                    <Vote className="h-6 w-6 text-sky-200" />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-[#10172A]/80 backdrop-blur border border-gray-700">
+            <Card className={panelClass}>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="min-w-0 flex-1 mr-2">
@@ -256,27 +286,27 @@ const PollAnalytics = () => {
                     </p>
                     <p className="text-xs text-gray-500 mt-1">Most selected</p>
                   </div>
-                  <div className="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Trophy className="h-6 w-6 text-yellow-400" />
+                  <div className="w-12 h-12 bg-emerald-500/12 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Trophy className="h-6 w-6 text-emerald-200" />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-[#10172A]/80 backdrop-blur border border-gray-700">
+            <Card className={panelClass}>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-gray-400 text-sm">Status</p>
-                    <Badge className={isExpired ? 'bg-red-500/20 text-red-300' : 'bg-green-500/20 text-green-300'}>
+                    <Badge className={isExpired ? 'bg-red-500/20 text-red-300' : 'bg-orange-500/18 text-orange-100'}>
                       {isExpired ? 'Expired' : 'Active'}
                     </Badge>
                     <p className="text-xs text-gray-500 mt-1">
                       {isExpired ? 'Ended' : 'Ongoing'}
                     </p>
                   </div>
-                  <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
-                    <Clock className="h-6 w-6 text-purple-400" />
+                  <div className="w-12 h-12 bg-white/6 rounded-xl flex items-center justify-center">
+                    <Clock className="h-6 w-6 text-slate-200" />
                   </div>
                 </div>
               </CardContent>
@@ -284,11 +314,11 @@ const PollAnalytics = () => {
           </div>
 
           {/* Poll Details */}
-          <Card className="bg-[#10172A]/80 backdrop-blur border border-gray-700 mb-8">
+          <Card className={`${panelClass} mb-8`}>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-xl text-white">Poll Details</CardTitle>
-                <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">
+                <Badge className="border border-orange-400/20 bg-orange-500/10 text-orange-100">
                   <MessageSquare className="h-3 w-3 mr-1" />
                   Analytics
                 </Badge>
@@ -311,7 +341,7 @@ const PollAnalytics = () => {
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={poll.profiles?.avatar_url} />
-                      <AvatarFallback className="bg-blue-500/20 text-blue-300">
+                      <AvatarFallback className="bg-orange-500/12 text-orange-100">
                         {poll.profiles?.username?.substring(0, 2).toUpperCase() || 'US'}
                       </AvatarFallback>
                     </Avatar>
@@ -329,16 +359,16 @@ const PollAnalytics = () => {
 
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 bg-[#10172A]/80 backdrop-blur border border-gray-700">
-              <TabsTrigger value="overview" className="text-white data-[state=active]:bg-[#1a2332]">
+            <TabsList className="grid w-full grid-cols-3 border border-white/10 bg-[#10172A]/80 backdrop-blur">
+              <TabsTrigger value="overview" className="text-white data-[state=active]:bg-orange-500/16 data-[state=active]:text-orange-100">
                 <BarChart4 className="h-4 w-4 mr-2" />
                 Overview
               </TabsTrigger>
-              <TabsTrigger value="charts" className="text-white data-[state=active]:bg-[#1a2332]">
+              <TabsTrigger value="charts" className="text-white data-[state=active]:bg-orange-500/16 data-[state=active]:text-orange-100">
                 <BarChart3 className="h-4 w-4 mr-2" />
                 Charts
               </TabsTrigger>
-              <TabsTrigger value="breakdown" className="text-white data-[state=active]:bg-[#1a2332]">
+              <TabsTrigger value="breakdown" className="text-white data-[state=active]:bg-orange-500/16 data-[state=active]:text-orange-100">
                 <FileText className="h-4 w-4 mr-2" />
                 Breakdown
               </TabsTrigger>
@@ -347,10 +377,10 @@ const PollAnalytics = () => {
             <TabsContent value="overview" className="mt-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Top Choice Card */}
-                <Card className="bg-[#10172A]/80 backdrop-blur border border-gray-700">
+                <Card className={panelClass}>
                   <CardHeader>
                     <CardTitle className="text-lg text-white flex items-center">
-                      <Trophy className="h-5 w-5 mr-2 text-yellow-400" />
+                      <Trophy className="h-5 w-5 mr-2 text-orange-200" />
                       Top Choice
                     </CardTitle>
                   </CardHeader>
@@ -368,7 +398,7 @@ const PollAnalytics = () => {
                             ? Math.round((option.votes_count / poll.totalVotes) * 100)
                             : 0;
                           return (
-                            <div key={option.id} className="flex items-center justify-between py-2 border-b border-gray-700 last:border-0">
+                            <div key={option.id} className="flex items-center justify-between py-2 border-b border-white/8 last:border-0">
                               <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
                                 <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
                                   style={{ backgroundColor: NIVO_COLORS[index % NIVO_COLORS.length] }}>
@@ -388,10 +418,10 @@ const PollAnalytics = () => {
                 </Card>
 
                 {/* Engagement Metrics */}
-                <Card className="bg-[#10172A]/80 backdrop-blur border border-gray-700">
+                <Card className={panelClass}>
                   <CardHeader>
                     <CardTitle className="text-lg text-white flex items-center">
-                      <TrendingUpIcon className="h-5 w-5 mr-2 text-green-400" />
+                      <TrendingUpIcon className="h-5 w-5 mr-2 text-sky-200" />
                       Engagement Metrics
                     </CardTitle>
                   </CardHeader>
@@ -415,7 +445,7 @@ const PollAnalytics = () => {
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-gray-300">Poll Status</span>
-                        <Badge className={isExpired ? 'bg-red-500/20 text-red-300' : 'bg-green-500/20 text-green-300'}>
+                        <Badge className={isExpired ? 'bg-red-500/20 text-red-300' : 'bg-orange-500/18 text-orange-100'}>
                           {isExpired ? 'Expired' : 'Active'}
                         </Badge>
                       </div>
@@ -426,7 +456,7 @@ const PollAnalytics = () => {
             </TabsContent>
 
             <TabsContent value="charts" className="mt-6">
-              <Card className="bg-[#10172A]/80 backdrop-blur border border-gray-700">
+              <Card className={panelClass}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-xl text-white">Visual Analytics</CardTitle>
@@ -442,8 +472,8 @@ const PollAnalytics = () => {
                           variant={activeChart === key ? "default" : "outline"}
                           onClick={() => setActiveChart(key)}
                           className={`flex items-center gap-2 ${activeChart === key
-                            ? 'bg-blue-600 text-white hover:bg-blue-700'
-                            : 'bg-[#0D1425] text-white border-gray-600 hover:bg-[#1a2332]'
+                            ? 'bg-gradient-to-r from-orange-500 to-amber-400 text-slate-950 hover:from-orange-400 hover:to-amber-300'
+                            : 'bg-[#0D1425] text-white border-white/10 hover:bg-[#1a2332]'
                             }`}
                         >
                           <Icon className="h-4 w-4" />
@@ -660,7 +690,7 @@ const PollAnalytics = () => {
             </TabsContent>
 
             <TabsContent value="breakdown" className="mt-6">
-              <Card className="bg-[#10172A]/80 backdrop-blur border border-gray-700">
+              <Card className={panelClass}>
                 <CardHeader>
                   <CardTitle className="text-xl text-white">Detailed Breakdown</CardTitle>
                 </CardHeader>
@@ -681,7 +711,7 @@ const PollAnalytics = () => {
                               <span className="text-white font-medium text-lg">{option.option_text}</span>
                             </div>
                             <div className="flex items-center gap-4">
-                              <span className="text-blue-400 font-bold text-lg">{percentage}%</span>
+                              <span className="text-orange-200 font-bold text-lg">{percentage}%</span>
                               <span className="text-gray-400">{option.votes_count} votes</span>
                             </div>
                           </div>
@@ -703,7 +733,7 @@ const PollAnalytics = () => {
           <div className="flex flex-col sm:flex-row justify-end gap-3 mt-8 pb-8">
             <Button
               variant="outline"
-              className="border-gray-600 bg-[#0D1425] hover:bg-[#1a2332] text-white"
+              className="border-white/10 bg-[#0D1425] text-white hover:bg-[#1a2332]"
               onClick={async () => {
                 if (!contentRef.current) return;
                 try {
@@ -745,7 +775,7 @@ const PollAnalytics = () => {
             </Button>
             <Button
               variant="outline"
-              className="border-gray-600 bg-[#0D1425] hover:bg-[#1a2332] text-white"
+              className="border-white/10 bg-[#0D1425] text-white hover:bg-[#1a2332]"
               onClick={async () => {
                 if (!contentRef.current) return;
                 try {
@@ -782,9 +812,8 @@ const PollAnalytics = () => {
               Export as Image
             </Button>
           </div>
-        </div>
       </div>
-    </div>
+    </PageShell>
   );
 };
 

@@ -4,6 +4,7 @@ import { useSocketContext } from '../context/SocketContext';
 import { UserAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
 import { motion } from 'framer-motion';
+import { useAuthModal } from '../context/AuthModalContext.jsx';
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter
 } from '@/components/ui/card';
@@ -15,13 +16,10 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogClose,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Tooltip as UITooltip,
   TooltipContent,
@@ -33,20 +31,24 @@ import {
   Calendar, Users, TrendingUp, BarChart3, Plus, Vote, Zap, Shield,
   Clock, Trophy, Sparkles, MessageCircle, Eye, Share2, MoreHorizontal,
   Copy, CheckCheck, BarChart4, PieChart as PieChartIcon, LineChart as LineChartIcon,
-  Lock, X, QrCode, Download, Mail, FileText, Twitter, Linkedin, Facebook,
-  ExternalLink, AlertCircle, Activity, Maximize2, ArrowLeft, Check, LogIn
+  Lock, X, QrCode, Download, FileText, Twitter, Linkedin, Facebook,
+  ExternalLink, AlertCircle, Activity, Maximize2, ArrowLeft, Check
 } from 'lucide-react';
 import { toast } from 'sonner';
 import TwitterXIcon from '../components/ui/icons/TwitterXIcon';
 import WhatsappIcon from '../components/ui/icons/WhatsappIcon';
 import FacebookIcon from '../components/ui/icons/FacebookIcon';
 import LinkedinIcon from '../components/ui/icons/LinkedinIcon';
+import PageShell, { GlassSection } from '../components/ui/PageShell.jsx';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+const panelClass =
+  'border border-white/10 bg-[linear-gradient(180deg,rgba(15,24,39,0.84),rgba(9,15,29,0.78))] backdrop-blur-xl';
 
 const trackEvent = (category, action, label, value) => {
   if (window.gtag) {
@@ -80,15 +82,15 @@ const Polls = ({ pollId, isDashboardView = false }) => {
   const [copiedPollId, setCopiedPollId] = useState(null);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [selectedSharePoll, setSelectedSharePoll] = useState(null);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [authAction, setAuthAction] = useState(null); // 'vote' or 'create'
   const [filter, setFilter] = useState('all'); // all, active, expired
+  const [resumeVoteOptionId, setResumeVoteOptionId] = useState(null);
 
   const POLLS_PER_PAGE = 12;
 
   const socketContext = useSocketContext();
   const socket = socketContext?.socket;
   const { user } = UserAuth();
+  const { openAuthModal, authResumeEvent } = useAuthModal();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -258,15 +260,8 @@ const Polls = ({ pollId, isDashboardView = false }) => {
     };
   }, [socket, pollId]);
 
-  const handleVote = useCallback(async () => {
-    // Check if user is authenticated
-    if (!user) {
-      setAuthAction('vote');
-      setAuthModalOpen(true);
-      return;
-    }
-
-    if (!selectedOption) {
+  const submitVote = useCallback(async (optionId) => {
+    if (!optionId) {
       toast.error('Please select an option to vote');
       return;
     }
@@ -279,11 +274,11 @@ const Polls = ({ pollId, isDashboardView = false }) => {
     // Update local state immediately
     setHasVoted(true);
     // Create a temporary vote object for immediate feedback
-    setUserVote({ option_id: selectedOption, user_id: user.id });
+    setUserVote({ option_id: optionId, user_id: user.id });
 
     // Update poll options count optimistically
     const updatedOptions = poll.options.map(opt => {
-      if (opt.id === selectedOption) {
+      if (opt.id === optionId) {
         return { ...opt, votes_count: opt.votes_count + 1 };
       }
       return opt;
@@ -293,28 +288,28 @@ const Polls = ({ pollId, isDashboardView = false }) => {
     try {
       if (socket && socket.connected) {
         // Emit vote over socket to ensure real-time server broadcasting
-        socket.emit("vote", { pollId, optionId: selectedOption, userId: user.id });
+        socket.emit("vote", { pollId, optionId, userId: user.id });
       } else {
         // Fallback if socket is unavailable
         const { error } = await supabase
           .from('votes')
           .insert({
             poll_id: pollId,
-            option_id: selectedOption,
+            option_id: optionId,
             user_id: user.id
           });
 
         if (error) throw error;
 
         // Update vote count on server
-        await supabase.rpc('increment_vote', { option_id: selectedOption });
+        await supabase.rpc('increment_vote', { option_id: optionId });
 
         // Refresh poll data to ensure sync locally
         fetchPoll();
       }
 
       toast.success('Your vote has been submitted!');
-      trackEvent('Poll', 'vote_submitted', pollId, selectedOption);
+      trackEvent('Poll', 'vote_submitted', pollId, optionId);
 
     } catch (err) {
       console.error("Error voting:", err);
@@ -325,18 +320,45 @@ const Polls = ({ pollId, isDashboardView = false }) => {
       setUserVote(previousUserVote);
       setPoll(previousPoll);
     }
-  }, [selectedOption, pollId, user, fetchPoll]);
+  }, [poll, pollId, user, fetchPoll, hasVoted, socket, userVote]);
 
-  const handleAuthRequired = useCallback((action) => {
-    setAuthAction(action);
-    setAuthModalOpen(true);
-  }, []);
+  const handleVote = useCallback(async () => {
+    if (!user) {
+      openAuthModal({
+        mode: 'login',
+        intent: 'vote',
+        pendingAuthAction: selectedOption ? { type: 'vote', pollId, optionId: selectedOption } : null,
+        onSuccess: () => {
+          if (selectedOption) {
+            submitVote(selectedOption);
+          }
+        },
+      });
+      return;
+    }
 
-  const handleSignIn = useCallback(() => {
-    // Navigate to sign in page with a return URL
-    navigate(`/auth?returnTo=${encodeURIComponent(window.location.pathname)}`);
-    setAuthModalOpen(false);
-  }, [navigate]);
+    await submitVote(selectedOption);
+  }, [user, openAuthModal, selectedOption, pollId, submitVote]);
+
+  useEffect(() => {
+    const handleResumeVote = (event) => {
+      const detail = event.detail;
+      if (detail?.type !== 'vote' || detail?.pollId !== pollId || !detail?.optionId) {
+        return;
+      }
+      setSelectedOption(detail.optionId);
+      setResumeVoteOptionId(detail.optionId);
+    };
+
+    window.addEventListener(authResumeEvent, handleResumeVote);
+    return () => window.removeEventListener(authResumeEvent, handleResumeVote);
+  }, [authResumeEvent, pollId]);
+
+  useEffect(() => {
+    if (!resumeVoteOptionId || !user || !poll || hasVoted) return;
+    submitVote(resumeVoteOptionId);
+    setResumeVoteOptionId(null);
+  }, [resumeVoteOptionId, user, poll, hasVoted, submitVote]);
 
   const copyPollLink = useCallback(async (pollId) => {
     const link = `${window.location.origin}/polls/${pollId}`;
@@ -396,49 +418,6 @@ const Polls = ({ pollId, isDashboardView = false }) => {
     };
   }, [polls, getPollStatus]);
 
-  // Authentication Required Modal
-  const AuthModal = () => (
-    <Dialog open={authModalOpen} onOpenChange={setAuthModalOpen}>
-      <DialogContent className="sm:max-w-md bg-[#10172A]/90 backdrop-blur border border-gray-700 text-white">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl">
-            <LogIn className="h-5 w-5 text-blue-400" />
-            Authentication Required
-          </DialogTitle>
-          <DialogDescription className="text-gray-300 text-base">
-            {authAction === 'vote'
-              ? 'You need to sign in to vote in this poll.'
-              : 'You need to sign in to create a poll.'
-            }
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-            <p className="text-sm text-blue-300">
-              Signing in allows you to vote in polls and track your participation history.
-            </p>
-          </div>
-        </div>
-        <DialogFooter className="flex-col sm:flex-row gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setAuthModalOpen(false)}
-            className="w-full sm:w-auto border-gray-600 bg-[#0D1425] hover:bg-[#1a2332] text-white"
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSignIn}
-            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            <LogIn className="mr-2 h-4 w-4" />
-            Sign In
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-
   // Share Modal
   const ShareModal = () => {
     if (!selectedSharePoll) return null;
@@ -448,10 +427,10 @@ const Polls = ({ pollId, isDashboardView = false }) => {
 
     return (
       <Dialog open={shareModalOpen} onOpenChange={setShareModalOpen}>
-        <DialogContent className="sm:max-w-md bg-[#10172A]/90 backdrop-blur border border-gray-700 text-white z-[9999]">
+        <DialogContent className="z-[9999] border border-orange-400/15 bg-[#10172A]/90 text-white backdrop-blur sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-xl flex items-center gap-2">
-              <Share2 className="h-5 w-5 text-blue-400" />
+              <Share2 className="h-5 w-5 text-orange-200" />
               Share Poll
             </DialogTitle>
             <DialogDescription className="text-gray-300">
@@ -460,7 +439,7 @@ const Polls = ({ pollId, isDashboardView = false }) => {
           </DialogHeader>
 
           <div className="space-y-6 py-4">
-            <div className="flex items-center space-x-2 bg-[#0D1425] p-2 rounded-lg border border-gray-700">
+            <div className="flex items-center space-x-2 rounded-lg border border-white/10 bg-[#0D1425] p-2">
               <Input
                 value={pollUrl}
                 readOnly
@@ -469,7 +448,7 @@ const Polls = ({ pollId, isDashboardView = false }) => {
               <Button
                 onClick={() => copyPollLink(selectedSharePoll.id)}
                 size="icon"
-                className="bg-blue-600 hover:bg-blue-700 text-white shrink-0 h-9 w-9"
+                className="h-9 w-9 shrink-0 bg-gradient-to-r from-orange-500 to-amber-400 text-slate-950 hover:from-orange-400 hover:to-amber-300"
               >
                 {copiedPollId === selectedSharePoll.id ? (
                   <Check className="h-4 w-4" />
@@ -557,7 +536,7 @@ const Polls = ({ pollId, isDashboardView = false }) => {
         <div className="max-w-7xl mx-auto p-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
             {[1, 2, 3, 4].map(i => (
-              <Card key={i} className="bg-[#10172A]/80 backdrop-blur border border-gray-700">
+              <Card key={i} className="border-white/10 bg-[#10172A]/80 backdrop-blur">
                 <CardContent className="p-6">
                   <Skeleton className="h-4 w-20 mb-2 bg-gray-700" />
                   <Skeleton className="h-8 w-16 bg-gray-700" />
@@ -567,7 +546,7 @@ const Polls = ({ pollId, isDashboardView = false }) => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map(i => (
-              <Card key={i} className="bg-[#10172A]/80 backdrop-blur border border-gray-700">
+              <Card key={i} className="border-white/10 bg-[#10172A]/80 backdrop-blur">
                 <CardHeader>
                   <Skeleton className="h-6 w-3/4 mb-2 bg-gray-700" />
                   <Skeleton className="h-4 w-1/2 bg-gray-700" />
@@ -591,7 +570,7 @@ const Polls = ({ pollId, isDashboardView = false }) => {
   if (error) {
     return (
       <div className="min-h-screen pt-16 flex items-center justify-center p-8">
-        <Card className="bg-[#10172A]/80 backdrop-blur border border-gray-700 max-w-md text-center">
+        <Card className="max-w-md border-white/10 bg-[#10172A]/80 text-center backdrop-blur">
           <CardContent className="pt-6">
             <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="h-8 w-8 text-red-400" />
@@ -600,7 +579,7 @@ const Polls = ({ pollId, isDashboardView = false }) => {
             <p className="text-gray-300 mb-4">{error}</p>
             <Button
               onClick={() => pollId ? fetchPoll() : fetchAllPolls()}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-gradient-to-r from-orange-500 to-amber-400 text-slate-950 hover:from-orange-400 hover:to-amber-300"
             >
               Try Again
             </Button>
@@ -614,14 +593,18 @@ const Polls = ({ pollId, isDashboardView = false }) => {
   if (pollId && poll) {
     if (isExpired) {
       return (
-        <div className="min-h-screen pt-16">
-          <div className="max-w-6xl mx-auto p-4">
-            <Card className="bg-[#10172A]/80 backdrop-blur border border-gray-700">
+        <PageShell
+          width="max-w-6xl"
+          badge={<><Clock className="h-4 w-4" /><span>Poll Closed</span></>}
+          title="Final results"
+          description="This poll is no longer accepting votes, but the results remain available."
+        >
+            <Card className={panelClass}>
               <CardHeader className="text-center">
-                <CardTitle className="text-3xl font-bold text-white">
+                <CardTitle className="font-display text-4xl font-semibold text-white">
                   {poll.question}
                 </CardTitle>
-                <div className="bg-red-500/20 border border-red-500/30 text-red-200 p-4 rounded-xl mt-4 max-w-md mx-auto">
+                <div className="mt-4 mx-auto max-w-md rounded-2xl border border-orange-400/20 bg-orange-500/10 p-4 text-orange-100">
                   <div className="flex items-center justify-center gap-2">
                     <Clock className="h-5 w-5" />
                     This poll has expired and is no longer accepting votes.
@@ -639,12 +622,12 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                       ? Math.round((option.votes_count / poll.totalVotes) * 100)
                       : 0;
                     return (
-                      <div key={option.id} className="bg-[#0D1425]/50 rounded-xl p-4 border border-gray-700">
+                        <div key={option.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                         <div className="flex justify-between items-center mb-2">
                           <span className="text-white font-medium text-lg">{option.option_text}</span>
                           <div className="flex items-center gap-3">
-                            <span className="text-blue-400 font-bold text-lg">{percentage}%</span>
-                            <span className="text-gray-400 text-sm">({option.votes_count} votes)</span>
+                            <span className="text-orange-300 font-bold text-lg">{percentage}%</span>
+                            <span className="text-slate-400 text-sm">({option.votes_count} votes)</span>
                           </div>
                         </div>
                         <Progress value={percentage} className="h-3 bg-gray-700" />
@@ -657,7 +640,7 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                 <div className="mt-8 flex justify-center gap-3">
                   <Button
                     onClick={() => navigate(`/polls/${pollId}/analytics`)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    className="bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-400 hover:to-amber-400"
                   >
                     <Activity className="mr-2 h-4 w-4" />
                     Full Analytics
@@ -665,7 +648,7 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                   <Button
                     onClick={() => openShareModal(poll)}
                     variant="outline"
-                    className="border-gray-600 bg-[#0D1425] hover:bg-[#1a2332] text-white"
+                    className="border-white/10 bg-white/5 text-white hover:bg-white/10"
                   >
                     <Share2 className="mr-2 h-4 w-4" />
                     Share Results
@@ -673,27 +656,22 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </div>
+        </PageShell>
       );
     }
 
     // Active poll view
     return (
-      <div className="min-h-screen pt-16">
-        <div className="max-w-4xl mx-auto p-4">
-          <Card className="bg-[#10172A]/80 backdrop-blur border border-gray-700">
+      <PageShell
+        width="max-w-4xl"
+        badge={<><Vote className="h-4 w-4" /><span>Live Poll</span></>}
+        title={poll.question}
+        description={poll.description || 'Vote in real time and watch the response shift as participation grows.'}
+      >
+          <Card className={panelClass}>
             <CardHeader className="text-center">
-              <CardTitle className="text-3xl font-bold text-white">
-                {poll.question}
-              </CardTitle>
-              {poll.description && (
-                <CardDescription className="text-gray-300 text-lg mt-2">
-                  {poll.description}
-                </CardDescription>
-              )}
               {poll.profiles && (
-                <div className="flex items-center justify-center gap-2 mt-4 text-gray-400">
+                <div className="mt-2 flex items-center justify-center gap-2 text-slate-400">
                   <Avatar className="h-6 w-6">
                     <AvatarImage src={poll.profiles.avatar_url} />
                     <AvatarFallback className="text-xs">
@@ -707,19 +685,19 @@ const Polls = ({ pollId, isDashboardView = false }) => {
             <CardContent className="pt-6">
               {!hasVoted && !isDashboardView ? (
                 <div className="space-y-4">
-                  <h3 className="text-xl font-semibold text-white text-center mb-6">Cast Your Vote</h3>
+                  <h3 className="mb-6 text-center font-display text-2xl font-semibold text-white">Cast your vote</h3>
                   {poll.options.map((option) => (
                     <div
                       key={option.id}
                       className={`flex items-center space-x-4 p-4 border-2 rounded-xl transition-all duration-200 cursor-pointer ${selectedOption === option.id
-                        ? 'border-blue-500 bg-blue-500/10'
-                        : 'border-gray-600 bg-[#0D1425]/50 hover:border-blue-400 hover:bg-blue-500/5'
+                        ? 'border-orange-400 bg-orange-500/10'
+                        : 'border-white/10 bg-white/[0.03] hover:border-orange-300/40 hover:bg-orange-500/5'
                         }`}
                       onClick={() => setSelectedOption(option.id)}
                     >
                       <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${selectedOption === option.id
-                        ? 'border-blue-500 bg-blue-500'
-                        : 'border-gray-500 bg-transparent'
+                        ? 'border-orange-400 bg-orange-400'
+                        : 'border-slate-500 bg-transparent'
                         }`}>
                         {selectedOption === option.id && (
                           <div className="w-2 h-2 rounded-full bg-white"></div>
@@ -733,7 +711,7 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                   <Button
                     onClick={handleVote}
                     disabled={!selectedOption}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 text-lg font-semibold rounded-xl mt-6 disabled:opacity-50"
+                    className="mt-6 w-full rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 py-6 text-lg font-semibold text-white hover:from-orange-400 hover:to-amber-400 disabled:opacity-50"
                     size="lg"
                   >
                     <Vote className="mr-3 h-5 w-5" />
@@ -744,8 +722,8 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                       <p className="text-gray-400 text-sm">
                         Need to sign in to vote?{' '}
                         <button
-                          onClick={() => handleAuthRequired('vote')}
-                          className="text-blue-400 hover:text-blue-300 underline"
+                          onClick={() => openAuthModal({ mode: 'login', intent: 'vote' })}
+                          className="text-orange-300 hover:text-orange-200 underline"
                         >
                           Sign in here
                         </button>
@@ -760,10 +738,10 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                       <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Check className="h-8 w-8 text-green-400" />
                       </div>
-                      <h3 className="text-2xl font-semibold text-white mb-2">Thank You for Voting!</h3>
+                      <h3 className="mb-2 font-display text-3xl font-semibold text-white">Vote recorded</h3>
                       {userVote && (
                         <p className="text-gray-300 text-lg">
-                          You voted for: <span className="text-blue-400 font-semibold">
+                          You voted for: <span className="text-orange-300 font-semibold">
                             {poll.options.find(opt => opt.id === userVote.option_id)?.option_text}
                           </span>
                         </p>
@@ -771,8 +749,8 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                     </div>
                   )}
 
-                  <div className="bg-[#0D1425]/50 rounded-xl p-6 border border-gray-700">
-                    <h4 className="text-xl font-semibold text-white text-center mb-6">Live Results</h4>
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+                    <h4 className="mb-6 text-center font-display text-2xl font-semibold text-white">Live results</h4>
 
                     {/* Detailed Results */}
                     <div className="space-y-3">
@@ -790,18 +768,18 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                                   {option.option_text}
                                 </span>
                                 {isUserVote && (
-                                  <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-xs">
+                                  <Badge className="border-orange-400/20 bg-orange-500/10 text-orange-200 text-xs">
                                     Your Vote
                                   </Badge>
                                 )}
                               </div>
-                              <span className="text-blue-400 font-bold text-lg bg-blue-500/20 px-3 py-1 rounded-full min-w-16 text-center">
+                              <span className="min-w-16 rounded-full bg-orange-500/10 px-3 py-1 text-center text-lg font-bold text-orange-300">
                                 {percentage}%
                               </span>
                             </div>
                             <Progress
                               value={percentage}
-                              className={`h-3 bg-gray-700 ${isUserVote ? '!bg-blue-500/50' : ''
+                              className={`h-3 bg-gray-700 ${isUserVote ? '!bg-orange-500/40' : ''
                                 }`}
                             />
                             <div className="flex justify-between text-sm text-gray-400">
@@ -814,7 +792,7 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                     </div>
 
                     {poll.totalVotes > 0 && (
-                      <div className="mt-6 p-4 bg-[#0D1425]/30 rounded-lg border border-gray-600">
+                      <div className="mt-6 rounded-xl border border-white/10 bg-white/[0.02] p-4">
                         <div className="flex items-center justify-between">
                           <span className="text-gray-300">Total Votes Cast:</span>
                           <span className="text-white font-bold text-lg">{poll.totalVotes}</span>
@@ -827,7 +805,7 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                   <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <Button
                       onClick={() => navigate(`/polls/${pollId}/analytics`)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                      className="bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-400 hover:to-amber-400"
                     >
                       <Activity className="mr-2 h-4 w-4" />
                       {isDashboardView ? 'View Full Analytics' : 'Advanced Analytics'}
@@ -835,7 +813,7 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                     <Button
                       onClick={() => openShareModal(poll)}
                       variant="outline"
-                      className="border-gray-600 bg-[#0D1425] hover:bg-[#1a2332] text-white"
+                      className="border-white/10 bg-white/5 text-white hover:bg-white/10"
                     >
                       <Share2 className="mr-2 h-4 w-4" />
                       Share Results
@@ -845,8 +823,7 @@ const Polls = ({ pollId, isDashboardView = false }) => {
               )}
             </CardContent>
           </Card>
-        </div>
-      </div>
+      </PageShell>
     );
   }
 
@@ -856,8 +833,8 @@ const Polls = ({ pollId, isDashboardView = false }) => {
       return (
         <div className="min-h-screen pt-16 flex items-center justify-center p-8">
           <div className="text-center max-w-2xl">
-            <div className="w-32 h-32 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-8">
-              <Vote className="h-16 w-16 text-blue-400" />
+            <div className="mx-auto mb-8 flex h-32 w-32 items-center justify-center rounded-full bg-orange-500/12">
+              <Vote className="h-16 w-16 text-orange-200" />
             </div>
             <h1 className="text-5xl font-bold text-white mb-6">
               Start the Conversation
@@ -868,13 +845,18 @@ const Polls = ({ pollId, isDashboardView = false }) => {
             <Button
               onClick={() => {
                 if (!user) {
-                  handleAuthRequired('create');
+                  openAuthModal({
+                    mode: 'login',
+                    intent: 'create',
+                    pendingAuthAction: { type: 'navigate', path: '/create-poll' },
+                    onSuccess: () => navigate('/create-poll', { state: { from: '/polls' } }),
+                  });
                   return;
                 }
-                navigate('/create-poll');
+                navigate('/create-poll', { state: { from: '/polls' } });
                 trackEvent('Navigation', 'create_first_poll');
               }}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg rounded-xl"
+              className="rounded-xl bg-gradient-to-r from-orange-500 to-amber-400 px-8 py-6 text-lg text-slate-950 hover:from-orange-400 hover:to-amber-300"
               size="lg"
             >
               <Plus className="mr-3 h-5 w-5" />
@@ -887,62 +869,66 @@ const Polls = ({ pollId, isDashboardView = false }) => {
 
     return (
       <TooltipProvider>
-        <div className="min-h-screen pt-16">
-          <div className="max-w-7xl mx-auto p-4">
+        <PageShell
+          width="max-w-7xl"
+          badge={<><Activity className="h-4 w-4" /><span>Live Polls</span></>}
+          title="Community polls"
+          description="Browse live conversations, protected voting flows, and shared analytics from one consistent discovery surface."
+        >
             {/* Enhanced Stats Section */}
             {stats && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                <Card className="bg-[#10172A]/80 backdrop-blur border border-gray-700">
+              <div className="mb-10 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <Card className={panelClass}>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-gray-400 text-sm font-medium">Total Polls</p>
-                        <p className="text-3xl font-bold text-white mt-1">{stats.totalPolls}</p>
+                        <p className="text-sm font-medium text-gray-400">Total Polls</p>
+                        <p className="mt-1 font-display text-3xl font-semibold text-white">{stats.totalPolls}</p>
                       </div>
-                      <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                        <BarChart3 className="h-6 w-6 text-blue-400" />
+                      <div className="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center">
+                        <BarChart3 className="h-6 w-6 text-orange-300" />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-[#10172A]/80 backdrop-blur border border-gray-700">
+                <Card className={panelClass}>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-gray-400 text-sm font-medium">Total Votes</p>
-                        <p className="text-3xl font-bold text-white mt-1">{stats.totalVotes.toLocaleString()}</p>
+                        <p className="text-sm font-medium text-gray-400">Total Votes</p>
+                        <p className="mt-1 font-display text-3xl font-semibold text-white">{stats.totalVotes.toLocaleString()}</p>
                       </div>
-                      <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
-                        <Users className="h-6 w-6 text-green-400" />
+                      <div className="w-12 h-12 bg-sky-500/10 rounded-xl flex items-center justify-center">
+                        <Users className="h-6 w-6 text-sky-300" />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-[#10172A]/80 backdrop-blur border border-gray-700">
+                <Card className={panelClass}>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-gray-400 text-sm font-medium">Active Polls</p>
-                        <p className="text-3xl font-bold text-white mt-1">{stats.activePolls}</p>
+                        <p className="text-sm font-medium text-gray-400">Active Polls</p>
+                        <p className="mt-1 font-display text-3xl font-semibold text-white">{stats.activePolls}</p>
                       </div>
-                      <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
-                        <MessageCircle className="h-6 w-6 text-purple-400" />
+                      <div className="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center">
+                        <MessageCircle className="h-6 w-6 text-emerald-300" />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-[#10172A]/80 backdrop-blur border border-gray-700">
+                <Card className={panelClass}>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-gray-400 text-sm font-medium">Avg. Engagement</p>
-                        <p className="text-3xl font-bold text-white mt-1">{stats.avgEngagement}%</p>
+                        <p className="text-sm font-medium text-gray-400">Avg. Engagement</p>
+                        <p className="mt-1 font-display text-3xl font-semibold text-white">{stats.avgEngagement}%</p>
                       </div>
-                      <div className="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center">
-                        <TrendingUp className="h-6 w-6 text-yellow-400" />
+                      <div className="w-12 h-12 bg-violet-500/10 rounded-xl flex items-center justify-center">
+                        <TrendingUp className="h-6 w-6 text-violet-300" />
                       </div>
                     </div>
                   </CardContent>
@@ -951,9 +937,10 @@ const Polls = ({ pollId, isDashboardView = false }) => {
             )}
 
             {/* Action Bar */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 p-6 bg-[#10172A]/80 backdrop-blur border border-gray-700 rounded-2xl">
+            <GlassSection className="mb-8 p-5">
+            <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
               <div>
-                <h2 className="text-2xl font-bold text-white mb-2">Community Polls</h2>
+                <h2 className="mb-2 font-display text-[1.75rem] font-semibold text-white">Community Polls</h2>
                 <p className="text-gray-400">Discover and participate in real-time discussions</p>
               </div>
               <div className="flex gap-3">
@@ -961,20 +948,20 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="outline"
-                      className="border-gray-600 bg-[#0D1425] hover:bg-[#1a2332] text-white"
-                    >
-                      <Eye className="mr-2 h-4 w-4" />
+                    className="border-white/10 bg-white/5 text-white hover:bg-white/10"
+                  >
+                    <Eye className="mr-2 h-4 w-4" />
                       Filter: {filter.charAt(0).toUpperCase() + filter.slice(1)}
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-[#10172A] border-gray-700 text-white">
-                    <DropdownMenuItem onClick={() => setFilter('all')} className="hover:bg-blue-600/20 cursor-pointer">
+                  <DropdownMenuContent className="border-white/10 bg-[#10172A] text-white">
+                    <DropdownMenuItem onClick={() => setFilter('all')} className="hover:bg-orange-500/15 cursor-pointer">
                       All Polls
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setFilter('active')} className="hover:bg-blue-600/20 cursor-pointer">
+                    <DropdownMenuItem onClick={() => setFilter('active')} className="hover:bg-orange-500/15 cursor-pointer">
                       Active Only
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setFilter('expired')} className="hover:bg-blue-600/20 cursor-pointer">
+                    <DropdownMenuItem onClick={() => setFilter('expired')} className="hover:bg-orange-500/15 cursor-pointer">
                       Expired Only
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -982,34 +969,40 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                 <Button
                   onClick={() => {
                     if (!user) {
-                      handleAuthRequired('create');
+                      openAuthModal({
+                        mode: 'login',
+                        intent: 'create',
+                        pendingAuthAction: { type: 'navigate', path: '/create-poll' },
+                        onSuccess: () => navigate('/create-poll', { state: { from: '/polls' } }),
+                      });
                       return;
                     }
-                    navigate('/create-poll');
+                    navigate('/create-poll', { state: { from: '/polls' } });
                   }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  className="bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-400 hover:to-amber-400"
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   New Poll
                 </Button>
               </div>
             </div>
+            </GlassSection>
 
             {/* Enhanced Polls Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-3">
               {polls.map(poll => {
-                const isTrending = poll.totalVotes >= 10; // Lower threshold for demo
+                const isTrending = poll.totalVotes >= 10;
                 const isHighEngagement = poll.engagementRate >= 60;
-                const isExpiredPoll = status === 'expired';
+                const isExpiredPoll = Boolean(poll.expires_at && new Date(poll.expires_at) < new Date());
 
                 return (
-                  <Card key={poll.id} className="bg-[#10172A]/80 backdrop-blur border border-gray-700 hover:border-blue-500/30 transition-all duration-300 group">
+                  <Card key={poll.id} className={`${panelClass} group transition-all duration-300 hover:border-orange-400/30`}>
                     <CardHeader className="pb-4">
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex items-center gap-2">
                           <Avatar className="h-8 w-8 border border-gray-600">
                             <AvatarImage src={poll.profiles?.avatar_url} />
-                            <AvatarFallback className="bg-blue-500/20 text-blue-300 text-xs">
+                            <AvatarFallback className="bg-orange-500/10 text-orange-200 text-xs">
                               {getInitials(poll.profiles?.username, poll.created_by)}
                             </AvatarFallback>
                           </Avatar>
@@ -1017,11 +1010,11 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                             {poll.is_password_protected && (
                               <UITooltip>
                                 <TooltipTrigger>
-                                  <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20 hover:bg-yellow-500/20">
+                                  <Badge variant="outline" className="border-amber-400/20 bg-amber-500/10 text-amber-200 hover:bg-amber-500/20">
                                     <Shield className="h-3 w-3" />
                                   </Badge>
                                 </TooltipTrigger>
-                                <TooltipContent className="bg-[#1E293B] text-white border-gray-700">
+                                <TooltipContent className="border-white/10 bg-[#1E293B] text-white">
                                   <p className="text-xs">Password Protected</p>
                                 </TooltipContent>
                               </UITooltip>
@@ -1030,12 +1023,12 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                             {isTrending && (
                               <UITooltip>
                                 <TooltipTrigger>
-                                  <Badge variant="outline" className="bg-orange-500/10 text-orange-400 border-orange-500/20 hover:bg-orange-500/20">
+                                  <Badge variant="outline" className="border-orange-400/20 bg-orange-500/10 text-orange-200 hover:bg-orange-500/20">
                                     <Zap className="h-3 w-3 mr-1" />
                                     <span className="text-[10px] font-bold">TRENDING</span>
                                   </Badge>
                                 </TooltipTrigger>
-                                <TooltipContent className="bg-[#1E293B] text-white border-gray-700">
+                                <TooltipContent className="border-white/10 bg-[#1E293B] text-white">
                                   <p className="text-xs">High activity: {poll.totalVotes}+ votes</p>
                                 </TooltipContent>
                               </UITooltip>
@@ -1044,12 +1037,12 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                             {isHighEngagement && (
                               <UITooltip>
                                 <TooltipTrigger>
-                                  <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/20 hover:bg-purple-500/20">
+                                  <Badge variant="outline" className="border-sky-400/20 bg-sky-500/10 text-sky-200 hover:bg-sky-500/20">
                                     <TrendingUp className="h-3 w-3 mr-1" />
                                     <span className="text-[10px] font-bold">HOT</span>
                                   </Badge>
                                 </TooltipTrigger>
-                                <TooltipContent className="bg-[#1E293B] text-white border-gray-700">
+                                <TooltipContent className="border-white/10 bg-[#1E293B] text-white">
                                   <p className="text-xs">High Engagement: {poll.engagementRate}% participation</p>
                                 </TooltipContent>
                               </UITooltip>
@@ -1062,7 +1055,7 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                                     <Clock className="h-3 w-3" />
                                   </Badge>
                                 </TooltipTrigger>
-                                <TooltipContent className="bg-[#1E293B] text-white border-gray-700">
+                                <TooltipContent className="border-white/10 bg-[#1E293B] text-white">
                                   <p className="text-xs">Poll Expired</p>
                                 </TooltipContent>
                               </UITooltip>
@@ -1079,7 +1072,7 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                         </Button>
                       </div>
 
-                      <CardTitle className="text-lg text-white line-clamp-2 group-hover:text-blue-400 transition-colors cursor-pointer"
+                      <CardTitle className="font-display text-[1.35rem] leading-8 text-white line-clamp-2 group-hover:text-orange-200 transition-colors cursor-pointer"
                         onClick={() => {
                           navigate(`/polls/${poll.id}`);
                           trackEvent('Poll', 'open_detail', poll.id);
@@ -1088,7 +1081,7 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                         {poll.question}
                       </CardTitle>
 
-                      <CardDescription className="flex items-center justify-between text-sm mt-3">
+                      <CardDescription className="mt-3 flex items-center justify-between text-sm">
                         <span className="text-gray-400 flex items-center gap-1">
                           <Calendar className="h-4 w-4" />
                           {new Date(poll.created_at).toLocaleDateString()}
@@ -1098,8 +1091,8 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                             <Users className="h-4 w-4" />
                             {poll.participantCount}
                           </span>
-                          <span className={`flex items-center gap-1 ${poll.engagementRate > 50 ? 'text-green-400' :
-                            poll.engagementRate > 20 ? 'text-yellow-400' :
+                          <span className={`flex items-center gap-1 ${poll.engagementRate > 50 ? 'text-emerald-300' :
+                            poll.engagementRate > 20 ? 'text-orange-200' :
                               'text-gray-400'
                             }`}>
                             <TrendingUp className="h-4 w-4" />
@@ -1116,16 +1109,16 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                           : 0;
                         return (
                           <div key={option.id} className="mb-3">
-                            <div className="flex justify-between text-sm mb-1">
+                            <div className="mb-1 flex justify-between text-sm">
                               <span className="text-white truncate font-medium">{option.option_text}</span>
-                              <span className="text-blue-400 font-bold">{percentage}%</span>
+                              <span className="text-orange-300 font-bold">{percentage}%</span>
                             </div>
                             <Progress value={percentage} className="h-2 bg-gray-700" />
                           </div>
                         );
                       })}
                       {poll.options.length > 2 && (
-                        <p className="text-gray-400 text-sm text-center mt-3 bg-[#0D1425]/50 py-1 rounded-full">
+                        <p className="mt-3 rounded-full bg-[#0D1425]/50 py-1 text-center text-sm text-gray-400">
                           +{poll.options.length - 2} more options
                         </p>
                       )}
@@ -1137,10 +1130,10 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                           , { votes_count: -1 });
 
                         return topChoice && topChoice.votes_count > 0 && (
-                          <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                            <div className="flex items-center gap-2 mb-1">
-                              <Trophy className="h-4 w-4 text-yellow-400" />
-                              <span className="text-xs font-semibold text-yellow-300">Community Choice</span>
+                          <div className="mt-4 rounded-lg border border-orange-400/15 bg-orange-500/8 p-3">
+                            <div className="mb-1 flex items-center gap-2">
+                              <Trophy className="h-4 w-4 text-orange-200" />
+                              <span className="text-xs font-semibold text-orange-100">Community Choice</span>
                             </div>
                             <p className="text-white text-sm font-medium truncate">
                               {topChoice.option_text}
@@ -1156,7 +1149,7 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                     <CardFooter>
                       <div className="flex gap-2 w-full">
                         <Button
-                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl"
+                          className="flex-1 rounded-xl bg-gradient-to-r from-orange-500 to-amber-400 py-2.5 font-semibold text-slate-950 hover:from-orange-400 hover:to-amber-300"
                           onClick={() => {
                             navigate(`/polls/${poll.id}`);
                             trackEvent('Poll', 'open_detail', poll.id);
@@ -1180,13 +1173,13 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="border-gray-600 bg-[#0D1425] hover:bg-[#1a2332] text-gray-300 hover:text-white"
+                                className="border-white/10 bg-[#0D1425] text-gray-300 hover:bg-[#1a2332] hover:text-white"
                                 onClick={() => navigate(`/polls/${poll.id}/analytics`)}
                               >
                                 <Activity className="h-4 w-4" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent className="bg-white text-black border-gray-200">
+                            <TooltipContent className="border-white/10 bg-[#1E293B] text-white">
                               <p>View Analytics</p>
                             </TooltipContent>
                           </UITooltip>
@@ -1195,7 +1188,7 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="border-gray-600 bg-[#0D1425] hover:bg-[#1a2332] text-gray-300 hover:text-white"
+                                className="border-white/10 bg-[#0D1425] text-gray-300 hover:bg-[#1a2332] hover:text-white"
                                 onClick={() => openShareModal(poll)}
                               >
                                 {copiedPollId === poll.id ? (
@@ -1205,7 +1198,7 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                                 )}
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent className="bg-white text-black border-gray-200">
+                            <TooltipContent className="border-white/10 bg-[#1E293B] text-white">
                               <p>Share Poll</p>
                             </TooltipContent>
                           </UITooltip>
@@ -1223,7 +1216,7 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                 <Button
                   onClick={loadMore}
                   disabled={loading}
-                  className="bg-[#0D1425] border border-gray-600 hover:bg-[#1a2332] text-white px-8 py-6 rounded-xl"
+                  className="border border-white/10 bg-white/5 px-8 py-6 rounded-xl text-white hover:bg-white/10"
                   size="lg"
                 >
                   {loading ? (
@@ -1240,11 +1233,9 @@ const Polls = ({ pollId, isDashboardView = false }) => {
                 </Button>
               </div>
             )}
-          </div>
-        </div>
+        </PageShell>
 
         {/* Render Modals */}
-        <AuthModal />
         <ShareModal />
       </TooltipProvider>
     );
